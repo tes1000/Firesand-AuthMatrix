@@ -1,0 +1,1822 @@
+{
+  "base_url": "https://app.dev.onci.app",
+  "default_headers": {
+    "Accept": "application/json",
+    "Content-Type": "application/json"
+  },
+  "roles": {
+    "guest": {
+      "auth": {
+        "type": "none"
+      }
+    },
+    "authenticated": {
+      "auth": {
+        "type": "bearer",
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InBvMEVDWWhES3hlak5jY25oUHl4NyJ9.eyJvbmNpX2luZm9ibG9iIjoiZXlKMWFXUWlPaUpqWldKalpqSXpOelV3WVRCbE5XWmtZemhpTW1ZeU9UazBaalkzTWpKaE56a3lPVFJtTTJFd09UUmpNRE15TmpBek1qa3hOREkwWlRZMU5EWXhNakV6SWl3aWRHVnVZVzUwWDJsa0lqb2laalJoWm1JME1EZ3RaakprWkMwMFpXRXhMVGhpWXpFdFpEUmtZMkV3T0dVMFpEazBJaXdpWlcxaGFXd2lPaUowTG5KMWMzTmxiR3hBWm1seVpYTmhibVF1WTI4dWRXc2lMQ0p2Ym1OcFgzVnpaWElpT21aaGJITmxMQ0puYVhabGJsOXVZVzFsSWpvaVUyTnZjbVZqWVhKa0lpd2labUZ0YVd4NVgyNWhiV1VpT2lKVmMyVnlJaXdpWW14dllsOTBlWEJsSWpvaWRYTmxjaUlzSW1Kc2IySmZjMjkxY21ObElqb2laWGgwWlhKdVlXd2lmUT09IiwiaXNzIjoiaHR0cHM6Ly9kZXYuYXV0aC5vbmNpLmFwcC8iLCJzdWIiOiJhdXRoMHw2ODliMTFkNDU1NTI5YjVjODUxZjFkMGUiLCJhdWQiOlsib25jaV9hcGkiLCJodHRwczovL2Rldi1ldS13ZXN0LTEuZXUuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTc1NTA4OTExNywiZXhwIjoxNzU1MTc1NTE3LCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIHdlYnNpdGVfdXNlciIsIm9yZ19pZCI6Im9yZ183cGROU0NWWmtuVzFqRWg2IiwiYXpwIjoiQlFhTVZmQmJVYmJuSHBPMlJRQ05LM0VFTnJWOE1hZVEifQ.YWkb2QY6MUaCsNj90yyYzk9vtt63epQr7dkx6q3RDbbYTFetkeKym5VrAA7Ct4MUg51u1ZAW-x3qVy9F5OL122FNcUDBfJYvNRk7vNNwEUHbpxn5JbocK303ja0bBxr8DbGQyl-6qH65BO6qIRpJ0JJ_2VabnKw6BYo5E73bADDJezG5vN4P9hgqiAViZA-Yi3YPiRBxPSfePxQQ2CVULl4IjB1E_UqOnA9VRGx0P1OkPCC7ePd_b0bFWWwVsTcu63mdMf_pTa3kdw4TonNSEfIOQosNvIxvyuoslvfZ7d2_S9SZFWyGM7PZlfL46SPMgSBTpwHykVz_qBZuanNkdw"
+      }
+    }
+  },
+  "endpoints": [
+    {
+      "name": "001",
+      "method": "GET",
+      "path": "/",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "005",
+      "method": "GET",
+      "path": "/api",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "006",
+      "method": "GET",
+      "path": "/api/climate",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "007",
+      "method": "GET",
+      "path": "/api/climate/v2",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "008",
+      "method": "GET",
+      "path": "/api/climate/v2/borrower",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "012",
+      "method": "GET",
+      "path": "/api/climate/v2/climate-naics-groups",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "014",
+      "method": "GET",
+      "path": "/api/climate/v2/loanbook",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "019",
+      "method": "GET",
+      "path": "/api/climate/v2/sector",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "028",
+      "method": "GET",
+      "path": "/api/climate/v2/sector-metadata-at-level",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "032",
+      "method": "GET",
+      "path": "/api/climate/v2/transition-risk-score",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "037",
+      "method": "GET",
+      "path": "/api/feature-flags",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "038",
+      "method": "GET",
+      "path": "/api/feature-flags/events",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "039",
+      "method": "GET",
+      "path": "/api/feature-flags/events/bulk",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "040",
+      "method": "GET",
+      "path": "/api/feature-flags/events/bulk/6202a142a39796145565db72",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "041",
+      "method": "POST",
+      "path": "/api/feature-flags/events/bulk/6202a142a39796145565db72",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "047",
+      "method": "GET",
+      "path": "/api/feature-flags/sdk",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "048",
+      "method": "GET",
+      "path": "/api/feature-flags/sdk/evalx",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "049",
+      "method": "GET",
+      "path": "/api/feature-flags/sdk/evalx/6202a142a39796145565db72",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "050",
+      "method": "GET",
+      "path": "/api/feature-flags/sdk/evalx/6202a142a39796145565db72/contexts",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "051",
+      "method": "GET",
+      "path": "/api/feature-flags/sdk/evalx/6202a142a39796145565db72/contexts/eyJraW5kIjoidXNlciIsImtleSI6ImNlYmNmMjM3NTBhMGU1ZmRjOGIyZjI5OTRmNjcyMmE3OTI5NGYzYTA5NGMwMzI2MDMyOTE0MjRlNjU0NjEyMTMiLCJ0ZW5hbnRJZCI6ImY0YWZiNDA4LWYyZGQtNGVhMS04YmMxLWQ0ZGNhMDhlNGQ5NCIsImlzT2Frbm9ydGgiOmZhbHNlfQ",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "053",
+      "method": "GET",
+      "path": "/api/monitoring",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "054",
+      "method": "GET",
+      "path": "/api/monitoring/v1",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "055",
+      "method": "GET",
+      "path": "/api/monitoring/v1/borrowers-info",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "057",
+      "method": "GET",
+      "path": "/api/monitoring/v1/borrowers_alerts",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "060",
+      "method": "GET",
+      "path": "/api/monitoring/v2",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "061",
+      "method": "GET",
+      "path": "/api/monitoring/v2/scenario",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "062",
+      "method": "GET",
+      "path": "/api/monitoring/v2/scenario/11d4b96c-0839-441e-b25d-9e9bbed0c158",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "063",
+      "method": "GET",
+      "path": "/api/monitoring/v2/scenario/11d4b96c-0839-441e-b25d-9e9bbed0c158/borrowers",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "065",
+      "method": "GET",
+      "path": "/api/polaris",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "066",
+      "method": "GET",
+      "path": "/api/polaris/api",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "067",
+      "method": "GET",
+      "path": "/api/polaris/api/borrower-audit",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "068",
+      "method": "GET",
+      "path": "/api/polaris/api/borrower-audit/v1",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "069",
+      "method": "GET",
+      "path": "/api/polaris/api/borrower-audit/v1/excluded-borrowers",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "071",
+      "method": "GET",
+      "path": "/api/polaris/api/climate-lite",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "072",
+      "method": "GET",
+      "path": "/api/polaris/api/climate-lite/v1",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "073",
+      "method": "GET",
+      "path": "/api/polaris/api/climate-lite/v1/climate-risk",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "076",
+      "method": "GET",
+      "path": "/api/polaris/api/fema",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "077",
+      "method": "GET",
+      "path": "/api/polaris/api/fema/v1",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "078",
+      "method": "GET",
+      "path": "/api/polaris/api/fema/v1/county",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "093",
+      "method": "GET",
+      "path": "/api/polaris/api/fema/v1/filters",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "098",
+      "method": "GET",
+      "path": "/api/scenarios",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "099",
+      "method": "GET",
+      "path": "/api/scenarios/v1",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "100",
+      "method": "GET",
+      "path": "/api/scenarios/v1/industry_classifications",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "104",
+      "method": "GET",
+      "path": "/climate",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "105",
+      "method": "GET",
+      "path": "/climate/scenarios",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "106",
+      "method": "GET",
+      "path": "/climate/scenarios/net-zero-2050",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "107",
+      "method": "GET",
+      "path": "/climate/scenarios/net-zero-2050/drivers",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "133",
+      "method": "GET",
+      "path": "/api/feature-flags/sdk/evalx/6202a142a39796145565db72/contexts/eyJraW5kIjoidXNlciIsImtleSI6ImNlYmNmMjM3NTBhMGU1ZmRjOGIyZjI5OTRmNjcyMmE3OTI5NGYzYTA5NGMwMzI2MDMyOTE0MjRlNjU0NjEyMTMiLCJ0ZW5hbnRJZCI6IjA4MDhhZGJiLTI5ZTYtNDA1OC04MTdkLTFiZDJiNmQ3OWQ0NSIsImlzT2Frbm9ydGgiOmZhbHNlfQ",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "135",
+      "method": "GET",
+      "path": "/api/feature-flags/sdk/evalx/6202a142a39796145565db72/contexts/eyJraW5kIjoidXNlciIsImtleSI6ImNlYmNmMjM3NTBhMGU1ZmRjOGIyZjI5OTRmNjcyMmE3OTI5NGYzYTA5NGMwMzI2MDMyOTE0MjRlNjU0NjEyMTMiLCJ0ZW5hbnRJZCI6IjA4MDhhZGJiLTI5ZTYtNDA1OC04MTdkLTFiZDJiNmQ3OWQ0NSIsImlzT2Frbm9ydGgiOmZhbHNlfQ",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "141",
+      "method": "GET",
+      "path": "/authorize",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "299",
+      "method": "GET",
+      "path": "/authorize/resume",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "313",
+      "method": "GET",
+      "path": "/oauth",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "314",
+      "method": "OPTIONS",
+      "path": "/oauth/token",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "315",
+      "method": "POST",
+      "path": "/oauth/token",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "426",
+      "method": "GET",
+      "path": "/u",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "427",
+      "method": "GET",
+      "path": "/u/login",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "429",
+      "method": "POST",
+      "path": "/u/login",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "537",
+      "method": "GET",
+      "path": "/u/login/password-reset-start",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "538",
+      "method": "GET",
+      "path": "/u/login/password-reset-start/app-db",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "548",
+      "method": "GET",
+      "path": "/u/login/password-reset-start/climate-test-db",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "559",
+      "method": "GET",
+      "path": "/u/login/password-reset-start/scenario-analysis-test-db",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "571",
+      "method": "GET",
+      "path": "/v2",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "572",
+      "method": "GET",
+      "path": "/v2/logout",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "605",
+      "method": "GET",
+      "path": "/api/calc",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "606",
+      "method": "GET",
+      "path": "/api/calc/api",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "607",
+      "method": "GET",
+      "path": "/api/calc/api/calc",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "608",
+      "method": "GET",
+      "path": "/api/calc/api/calc/v2",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "609",
+      "method": "GET",
+      "path": "/api/calc/api/calc/v2/models",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "612",
+      "method": "POST",
+      "path": "/api/calc/api/calc/v2/models",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "614",
+      "method": "GET",
+      "path": "/api/calc/api/calc/v2/models/40c4431c-3b72-4e2c-9e7c-406739ddbc57",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "615",
+      "method": "GET",
+      "path": "/api/calc/api/calc/v2/models/40c4431c-3b72-4e2c-9e7c-406739ddbc57/clone",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "616",
+      "method": "POST",
+      "path": "/api/calc/api/calc/v2/models/40c4431c-3b72-4e2c-9e7c-406739ddbc57/clone",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "617",
+      "method": "GET",
+      "path": "/api/calc/api/calc/v2/models/b745a2e7-a200-4147-9a29-cd3b6bebd402",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "618",
+      "method": "GET",
+      "path": "/api/calc/api/calc/v2/models/b745a2e7-a200-4147-9a29-cd3b6bebd402/data-items",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "619",
+      "method": "POST",
+      "path": "/api/calc/api/calc/v2/models/b745a2e7-a200-4147-9a29-cd3b6bebd402/data-items",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "620",
+      "method": "GET",
+      "path": "/api/calc/api/calc/v2/models/b745a2e7-a200-4147-9a29-cd3b6bebd402/stages",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "621",
+      "method": "POST",
+      "path": "/api/calc/api/calc/v2/models/b745a2e7-a200-4147-9a29-cd3b6bebd402/stages",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "642",
+      "method": "GET",
+      "path": "/api/climate-forecast-admin",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "643",
+      "method": "GET",
+      "path": "/api/climate-forecast-admin/v1",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "644",
+      "method": "GET",
+      "path": "/api/climate-forecast-admin/v1/admin",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "645",
+      "method": "GET",
+      "path": "/api/climate-forecast-admin/v1/admin/spreadsheet",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "648",
+      "method": "GET",
+      "path": "/api/climate-forecast-admin/v1/admin/spreadsheet-annual",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "649",
+      "method": "POST",
+      "path": "/api/climate-forecast-admin/v1/admin/spreadsheet-annual",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "753",
+      "method": "GET",
+      "path": "/api/feature-flags/sdk/evalx/6202a142a39796145565db72/contexts/eyJraW5kIjoidXNlciIsImtleSI6IjMyNDI3NmM2MDFhYWRlZjA5Nzg0NmNmOGFiYjczNjI0NDM5ZGZhMGZiNjc4OGQ3NjEyMjRkM2Q3MjVhNzg1YjIiLCJ0ZW5hbnRJZCI6IjhhMDhlNmEzLTJkNTktNGQ0NC1iMDFmLWU5N2I4Yjk2ZTUyYSIsImlzT2Frbm9ydGgiOnRydWV9",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "755",
+      "method": "GET",
+      "path": "/api/feature-flags/sdk/evalx/6202a142a39796145565db72/contexts/eyJraW5kIjoidXNlciIsImtleSI6ImNlYmNmMjM3NTBhMGU1ZmRjOGIyZjI5OTRmNjcyMmE3OTI5NGYzYTA5NGMwMzI2MDMyOTE0MjRlNjU0NjEyMTMiLCJ0ZW5hbnRJZCI6IjhhMDhlNmEzLTJkNTktNGQ0NC1iMDFmLWU5N2I4Yjk2ZTUyYSIsImlzT2Frbm9ydGgiOmZhbHNlfQ",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "763",
+      "method": "GET",
+      "path": "/api/monitoring/v1/export_borrowers_with_lost_vr",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "776",
+      "method": "GET",
+      "path": "/api/polaris/api/ingestion",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "777",
+      "method": "GET",
+      "path": "/api/polaris/api/ingestion/input-files",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "788",
+      "method": "GET",
+      "path": "/api/scenarios/v1/parse_macro_variables",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    },
+    {
+      "name": "789",
+      "method": "POST",
+      "path": "/api/scenarios/v1/parse_macro_variables",
+      "expect": {
+        "guest": {
+          "status": [
+            401,
+            403
+          ]
+        },
+        "authenticated": {
+          "status": [
+            200,
+            201,
+            204
+          ]
+        }
+      }
+    }
+  ]
+}

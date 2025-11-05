@@ -1,0 +1,88 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "firesands-auth-matrix"
+version = "1.0.0"
+description = "A comprehensive tool for testing API authorization matrices across different user roles and endpoints"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Firesands Auth Matrix Team"}
+]
+keywords = ["api", "testing", "authorization", "security", "postman", "authentication"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Security",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "PySide6>=6.0.0",
+    "requests>=2.25.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "pytest-cov>=2.0",
+    "flake8>=3.8",
+    "black>=21.0",
+    "mypy>=0.800",
+]
+build = [
+    "pyinstaller>=4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-username/FiresandsAuthMatrix"
+Documentation = "https://github.com/your-username/FiresandsAuthMatrix#readme"
+Repository = "https://github.com/your-username/FiresandsAuthMatrix"
+"Bug Tracker" = "https://github.com/your-username/FiresandsAuthMatrix/issues"
+
+[project.scripts]
+authmatrix = "Firesand_Auth_Matrix:main"
+
+[tool.setuptools]
+packages = ["UI", "UI.components", "UI.views"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers"
+testpaths = [
+    "tests",
+]

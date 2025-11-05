@@ -1,0 +1,6 @@
+primary = "#9e1b21"
+secondary = "#7f7f82"
+banner = "#ed1b24"
+background = "#292929"
+text = "white"
+border = "#cdcdcd"
