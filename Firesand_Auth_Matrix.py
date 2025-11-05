@@ -1,7 +1,31 @@
 import json, sys, time, requests
 from UI import start_ui
 
+__version__ = "1.0.0"
+__author__ = "Firesands Auth Matrix Team"
+
 AUTHMATRIX_SHEBANG = "#!AUTHMATRIX"
+
+def show_help():
+    """Show command line help"""
+    print("Firesands Auth Matrix v" + __version__)
+    print("A comprehensive tool for testing API authorization matrices")
+    print()
+    print("Usage:")
+    print("  python Firesand_Auth_Matrix.py                 # Launch GUI")
+    print("  python Firesand_Auth_Matrix.py <spec_file>     # Run tests from file")
+    print("  python Firesand_Auth_Matrix.py --help          # Show this help")
+    print("  python Firesand_Auth_Matrix.py --version       # Show version")
+    print()
+    print("Supported file formats:")
+    print("  - AuthMatrix format (with #!AUTHMATRIX shebang)")
+    print("  - Postman collection JSON")
+    print()
+    print("Examples:")
+    print("  python Firesand_Auth_Matrix.py demo_auth_matrix.json")
+    print("  python Firesand_Auth_Matrix.py my_postman_collection.json")
+    print()
+    print("For more information, visit: https://github.com/your-username/FiresandsAuthMatrix")
 
 def detect_file_type(file_path):
     """Detect if file is authmatrix format (has shebang) or postman format"""
@@ -211,10 +235,36 @@ def print_matrix(results):
             row += " " + cell
         print(row)
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
+def main():
+    """Main entry point for the application"""
+    if len(sys.argv) == 1:
+        # No arguments - launch GUI
         start_ui(runner=run_spec)
+    elif len(sys.argv) == 2:
+        arg = sys.argv[1]
+        if arg in ['--help', '-h']:
+            show_help()
+        elif arg in ['--version', '-v']:
+            print(f"Firesands Auth Matrix v{__version__}")
+        else:
+            # Assume it's a spec file
+            try:
+                spec = load_and_convert_spec(arg)
+                results = run_spec(spec)
+                print_matrix(results)
+            except FileNotFoundError:
+                print(f"Error: File '{arg}' not found.")
+                sys.exit(1)
+            except json.JSONDecodeError as e:
+                print(f"Error: Invalid JSON in '{arg}': {e}")
+                sys.exit(1)
+            except Exception as e:
+                print(f"Error: {e}")
+                sys.exit(1)
     else:
-        spec = load_and_convert_spec(sys.argv[1])
-        results = run_spec(spec)
-        print_matrix(results)
+        print("Error: Too many arguments.")
+        print("Use --help for usage information.")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
