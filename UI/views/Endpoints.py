@@ -182,7 +182,7 @@ class EndpointsSection(QtWidgets.QWidget):
         dlg = QtWidgets.QDialog(self)
         dlg.setWindowTitle("Add Endpoint" if is_new else "Edit Endpoint")
         dlg.setModal(True)
-        dlg.resize(600, 700)
+        dlg.resize(480, 560)
         
         layout = QtWidgets.QVBoxLayout(dlg)
         
@@ -633,7 +633,7 @@ class ConfigureAllEndpointsDialog(QtWidgets.QDialog):
         self.store = store
         self.setWindowTitle("Configure All Endpoints")
         self.setModal(True)
-        self.resize(900, 700)
+        self.resize(720, 560)
         
         layout = QtWidgets.QVBoxLayout(self)
         
@@ -895,7 +895,7 @@ class EndpointConfigDialog(QtWidgets.QDialog):
         endpoint = store.spec["endpoints"][endpoint_index]
         self.setWindowTitle(f"Configure: {endpoint.get('name', '')}")
         self.setModal(True)
-        self.resize(500, 400)
+        self.resize(400, 320)
         
         layout = QtWidgets.QVBoxLayout(self)
         

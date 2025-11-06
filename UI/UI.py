@@ -26,7 +26,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, runner: Optional[Callable[[dict], dict]] = None):
         super().__init__()
         self.setWindowTitle("Auth Matrix")
-        self.resize(1150, 780)
+        self.resize(920, 624)
         
         # Center the window on the screen
         self._center_window()
@@ -59,11 +59,11 @@ class MainWindow(QtWidgets.QMainWindow):
         vlayout = QtWidgets.QVBoxLayout(central)
 
         # Base URL at the top
-        baseUrlEdit = QtWidgets.QLineEdit()
-        baseUrlEdit.setPlaceholderText("http://localhost:3000")
-        baseUrlEdit.textChanged.connect(self.store.set_base_url)
+        self.baseUrlEdit = QtWidgets.QLineEdit()
+        self.baseUrlEdit.setPlaceholderText("http://localhost:3000")
+        self.baseUrlEdit.textChanged.connect(self.store.set_base_url)
         vlayout.addWidget(QtWidgets.QLabel("<b>Base URL</b>"))
-        vlayout.addWidget(baseUrlEdit)
+        vlayout.addWidget(self.baseUrlEdit)
 
         # Tabs for Headers, Endpoints, Tokens
         self.tabs = TabsComponent(self.store)
@@ -83,6 +83,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.header.importRequested.connect(self._import_spec)
         self.header.exportRequested.connect(self._export_spec)
         self.header.runRequested.connect(self._run)
+
+        # Connect to spec changes to update UI
+        self.store.specChanged.connect(self._on_spec_changed)
+
+        # Initialize UI with current spec values
+        self._on_spec_changed()
 
         # statusbar
         self.statusBar().showMessage("Ready")
@@ -105,6 +111,16 @@ class MainWindow(QtWidgets.QMainWindow):
             
             # Move window to calculated position
             self.move(window_geometry.topLeft())
+
+    def _on_spec_changed(self):
+        """Update UI elements when the spec changes"""
+        # Update base URL field without triggering textChanged signal
+        base_url = self.store.spec.get("base_url", "")
+        if self.baseUrlEdit.text() != base_url:
+            # Temporarily disconnect signal to avoid feedback loop
+            self.baseUrlEdit.textChanged.disconnect()
+            self.baseUrlEdit.setText(base_url)
+            self.baseUrlEdit.textChanged.connect(self.store.set_base_url)
 
     # Theme application (apply static colors from Theme.py)
     def _apply_theme(self, color: QtGui.QColor):
@@ -247,7 +263,7 @@ class PostmanConfigDialog(QtWidgets.QDialog):
         self.store = store
         self.setWindowTitle("Configure Postman Collection")
         self.setModal(True)
-        self.resize(800, 600)
+        self.resize(640, 480)
         
         layout = QtWidgets.QVBoxLayout(self)
         
@@ -523,7 +539,7 @@ class ExportDialog(QtWidgets.QDialog):
         self.store = store
         self.setWindowTitle("Export Specification")
         self.setModal(True)
-        self.resize(400, 200)
+        self.resize(320, 160)
         
         layout = QtWidgets.QVBoxLayout(self)
         
@@ -564,7 +580,7 @@ class ImportDialog(QtWidgets.QDialog):
         self.store = store
         self.setWindowTitle("Import API Specification")
         self.setModal(True)
-        self.resize(800, 600)
+        self.resize(640, 480)
         
         layout = QtWidgets.QVBoxLayout(self)
         
@@ -1114,7 +1130,7 @@ class RoleAuthConfigDialog(QtWidgets.QDialog):
         super().__init__(parent)
         self.setWindowTitle("Configure Role and Authentication")
         self.setModal(True)
-        self.resize(500, 300)
+        self.resize(400, 240)
         
         layout = QtWidgets.QVBoxLayout(self)
         
