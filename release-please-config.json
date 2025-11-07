@@ -1,9 +1,0 @@
-{
-  "packages": {
-    ".": {
-      "release-type": "python",
-      "package-name": "firesands-auth-matrix",
-      "changelog-path": "CHANGELOG.md"
-    }
-  }
-}

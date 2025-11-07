@@ -181,46 +181,6 @@ FiresandsAuthMatrix/
 5. Push to the branch: `git push origin feature-name`
 6. Submit a pull request
 
-For more details, see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Releases and Versioning
-
-This project uses **[Release Please](https://github.com/googleapis/release-please)** for automated release management.
-
-### How It Works
-
-1. **Commit with conventional commits**: Use `feat:`, `fix:`, `feat!:` in your commit messages
-2. **Push to main**: Release Please automatically creates/updates a "Release PR"
-3. **Review the Release PR**: See what will be in the release (changelog, version bump)
-4. **Merge the Release PR**: Release Please automatically:
-   - Creates a GitHub release
-   - Tags the version
-   - Builds executables for Windows, macOS, and Linux
-   - Uploads binaries to the release
-
-### Conventional Commit Examples
-
-```bash
-# Patch release (1.0.0 → 1.0.1)
-git commit -m "fix: resolve authentication timeout"
-
-# Minor release (1.0.0 → 1.1.0)
-git commit -m "feat: add CSV export functionality"
-
-# Major release (1.0.0 → 2.0.0)
-git commit -m "feat!: redesign authentication API"
-# or
-git commit -m "feat: change auth flow
-
-BREAKING CHANGE: authentication now requires OAuth2"
-```
-
-See [Conventional Commits](https://www.conventionalcommits.org/) for more details.
-
-### Viewing Release History
-
-Check [CHANGELOG.md](CHANGELOG.md) (auto-generated) or the [Releases page](../../releases).
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
