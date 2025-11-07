@@ -3,8 +3,6 @@ name: Release Please
 on:
   push:
     branches: [release] 
-  pull_request:
-    branches: [release]    
 
 permissions:
   contents: write
@@ -12,6 +10,7 @@ permissions:
 
 jobs:
   release-please:
+    if: github.ref == 'refs/heads/release'   # hard guard
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
