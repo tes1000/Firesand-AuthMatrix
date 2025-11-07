@@ -1249,7 +1249,11 @@ class RoleAuthConfigDialog(QtWidgets.QDialog):
 # ------------------------------
 def start_ui(runner: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None):
     # Ensure multiprocessing works properly on Windows
-    multiprocessing.set_start_method('spawn', force=True)
+    try:
+        multiprocessing.set_start_method('spawn', force=True)
+    except RuntimeError:
+        # Already set, ignore
+        pass
     
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
     mw = MainWindow(runner=runner)
@@ -1259,5 +1263,9 @@ def start_ui(runner: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None
 # demo
 if __name__ == "__main__":
     # Set multiprocessing start method for Windows compatibility
-    multiprocessing.set_start_method('spawn', force=True)
+    try:
+        multiprocessing.set_start_method('spawn', force=True)
+    except RuntimeError:
+        # Already set, ignore
+        pass
     start_ui()

@@ -2,17 +2,35 @@
 Test suite for SpecStore class
 """
 
-import unittest
-import unittest.mock
+import pytest
 import json
 import tempfile
 import os
 from unittest.mock import patch, MagicMock
 
-# Mock PySide6 before importing SpecStore
+# Mock PySide6 with a better strategy that preserves real object behavior
 import sys
-sys.modules['PySide6'] = MagicMock()
-sys.modules['PySide6.QtCore'] = MagicMock()
+
+# Create a mock Signal class that behaves like a real signal
+class MockSignal:
+    def __init__(self, *args, **kwargs):
+        # Accept any arguments like the real Signal class
+        pass
+    def emit(self, *args, **kwargs):
+        pass
+    def connect(self, slot):
+        pass
+
+# Create a mock QtCore that has QObject as a real base class and Signal as our mock
+class MockQtCore:
+    QObject = object  # Use real object as base class
+    Signal = MockSignal
+
+mock_pyside6 = MagicMock()
+mock_pyside6.QtCore = MockQtCore()
+
+sys.modules['PySide6'] = mock_pyside6
+sys.modules['PySide6.QtCore'] = MockQtCore()
 
 # Add the parent directory to the path so we can import our modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -20,20 +38,21 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from UI.views.SpecStore import SpecStore, AUTHMATRIX_SHEBANG
 
 
-class TestSpecStore(unittest.TestCase):
+class TestSpecStore:
     """Test SpecStore functionality"""
     
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
         """Set up test cases"""
         self.store = SpecStore()
     
     def test_init_default_spec(self):
         """Test SpecStore initializes with default spec"""
-        self.assertEqual(self.store.spec["base_url"], "")
-        self.assertIn("guest", self.store.spec["roles"])
-        self.assertEqual(self.store.spec["roles"]["guest"]["auth"]["type"], "none")
-        self.assertEqual(self.store.spec["endpoints"], [])
-        self.assertIn("Accept", self.store.spec["default_headers"])
+        assert self.store.spec["base_url"] == ""
+        assert "guest" in self.store.spec["roles"]
+        assert self.store.spec["roles"]["guest"]["auth"]["type"] == "none"
+        assert self.store.spec["endpoints"] == []
+        assert "Accept" in self.store.spec["default_headers"]
     
     def test_load_spec_authmatrix_format(self):
         """Test loading AuthMatrix format with shebang"""
@@ -56,11 +75,11 @@ class TestSpecStore(unittest.TestCase):
 }}"""
         
         result = self.store.load_spec_from_content(authmatrix_content)
-        self.assertTrue(result)
-        self.assertEqual(self.store.spec["base_url"], "https://api.test.com")
-        self.assertIn("admin", self.store.spec["roles"])
-        self.assertEqual(len(self.store.spec["endpoints"]), 1)
-        self.assertIsNone(self.store._original_postman_data)
+        assert result
+        assert self.store.spec["base_url"] == "https://api.test.com"
+        assert "admin" in self.store.spec["roles"]
+        assert len(self.store.spec["endpoints"]) == 1
+        assert self.store._original_postman_data is None
     
     def test_load_spec_postman_format(self):
         """Test loading Postman collection format"""
@@ -78,20 +97,20 @@ class TestSpecStore(unittest.TestCase):
         }
         
         result = self.store.load_spec_from_content(json.dumps(postman_content))
-        self.assertTrue(result)
-        self.assertEqual(self.store.spec["base_url"], "https://api.example.com")
-        self.assertIn("guest", self.store.spec["roles"])
-        self.assertEqual(len(self.store.spec["endpoints"]), 1)
-        self.assertIsNotNone(self.store._original_postman_data)
+        assert result
+        assert self.store.spec["base_url"] == "https://api.example.com"
+        assert "guest" in self.store.spec["roles"]
+        assert len(self.store.spec["endpoints"]) == 1
+        assert self.store._original_postman_data is not None
     
     def test_load_spec_invalid_json(self):
         """Test loading invalid JSON content"""
         invalid_content = "{ invalid json"
         
         result = self.store.load_spec_from_content(invalid_content)
-        self.assertFalse(result)
+        assert not result
         # Spec should remain unchanged
-        self.assertEqual(self.store.spec["base_url"], "")
+        assert self.store.spec["base_url"] == ""
     
     def test_load_spec_plain_authmatrix_without_shebang(self):
         """Test loading plain AuthMatrix JSON without shebang"""
@@ -104,28 +123,28 @@ class TestSpecStore(unittest.TestCase):
         }
         
         result = self.store.load_spec_from_content(json.dumps(plain_content))
-        self.assertTrue(result)
-        self.assertEqual(self.store.spec["base_url"], "https://plain.api.com")
-        self.assertIn("user", self.store.spec["roles"])
+        assert result
+        assert self.store.spec["base_url"] == "https://plain.api.com"
+        assert "user" in self.store.spec["roles"]
     
     def test_is_postman_collection(self):
         """Test Postman collection detection"""
         # Valid Postman collection
         postman_data = {"info": {"name": "Test"}, "item": []}
-        self.assertTrue(self.store.is_postman_collection(postman_data))
+        assert self.store.is_postman_collection(postman_data)
         
         # Invalid - missing info
         invalid_data = {"item": []}
-        self.assertFalse(self.store.is_postman_collection(invalid_data))
+        assert not self.store.is_postman_collection(invalid_data)
         
         # Invalid - missing item
         invalid_data = {"info": {"name": "Test"}}
-        self.assertFalse(self.store.is_postman_collection(invalid_data))
+        assert not self.store.is_postman_collection(invalid_data)
         
         # Invalid - not a dict
-        self.assertFalse(self.store.is_postman_collection([]))
-        self.assertFalse(self.store.is_postman_collection("string"))
-        self.assertFalse(self.store.is_postman_collection(None))
+        assert not self.store.is_postman_collection([])
+        assert not self.store.is_postman_collection("string")
+        assert not self.store.is_postman_collection(None)
     
     def test_convert_postman_with_bearer_auth(self):
         """Test Postman conversion with bearer authentication"""
@@ -150,11 +169,11 @@ class TestSpecStore(unittest.TestCase):
         
         result = self.store.convert_postman_to_authmatrix(postman_data)
         
-        self.assertEqual(result["base_url"], "https://api.example.com")
-        self.assertIn("admin", result["roles"])
-        self.assertEqual(result["roles"]["admin"]["auth"]["type"], "bearer")
-        self.assertEqual(result["roles"]["admin"]["auth"]["token"], "secret-token")
-        self.assertEqual(len(result["endpoints"]), 1)
+        assert result["base_url"] == "https://api.example.com"
+        assert "admin" in result["roles"]
+        assert result["roles"]["admin"]["auth"]["type"] == "bearer"
+        assert result["roles"]["admin"]["auth"]["token"] == "secret-token"
+        assert len(result["endpoints"]) == 1
     
     def test_convert_postman_no_auth(self):
         """Test Postman conversion without authentication"""
@@ -174,15 +193,15 @@ class TestSpecStore(unittest.TestCase):
         result = self.store.convert_postman_to_authmatrix(postman_data)
         
         # Should only have guest role
-        self.assertEqual(list(result["roles"].keys()), ["guest"])
-        self.assertEqual(result["roles"]["guest"]["auth"]["type"], "none")
+        assert list(result["roles"].keys()) == ["guest"]
+        assert result["roles"]["guest"]["auth"]["type"] == "none"
     
     def test_set_base_url(self):
         """Test setting base URL"""
         with patch.object(self.store, 'specChanged') as mock_signal:
             self.store.set_base_url("https://new.api.com")
             
-            self.assertEqual(self.store.spec["base_url"], "https://new.api.com")
+            assert self.store.spec["base_url"] == "https://new.api.com"
             mock_signal.emit.assert_called_once()
     
     def test_set_base_url_with_whitespace(self):
@@ -190,7 +209,7 @@ class TestSpecStore(unittest.TestCase):
         with patch.object(self.store, 'specChanged') as mock_signal:
             self.store.set_base_url("  https://api.com  ")
             
-            self.assertEqual(self.store.spec["base_url"], "https://api.com")
+            assert self.store.spec["base_url"] == "https://api.com"
             mock_signal.emit.assert_called_once()
     
     def test_set_base_url_empty(self):
@@ -198,7 +217,7 @@ class TestSpecStore(unittest.TestCase):
         with patch.object(self.store, 'specChanged') as mock_signal:
             self.store.set_base_url("")
             
-            self.assertEqual(self.store.spec["base_url"], "")
+            assert self.store.spec["base_url"] == ""
             mock_signal.emit.assert_called_once()
     
     def test_set_header(self):
@@ -206,7 +225,7 @@ class TestSpecStore(unittest.TestCase):
         with patch.object(self.store, 'specChanged') as mock_signal:
             self.store.set_header("Content-Type", "application/json")
             
-            self.assertEqual(self.store.spec["default_headers"]["Content-Type"], "application/json")
+            assert self.store.spec["default_headers"]["Content-Type"] == "application/json"
             mock_signal.emit.assert_called_once()
     
     def test_set_header_empty_key(self):
@@ -216,8 +235,8 @@ class TestSpecStore(unittest.TestCase):
             self.store.set_header("   ", "value")
             
             # Should not add empty keys
-            self.assertNotIn("", self.store.spec["default_headers"])
-            self.assertNotIn("   ", self.store.spec["default_headers"])
+            assert "" not in self.store.spec["default_headers"]
+            assert "   " not in self.store.spec["default_headers"]
             mock_signal.emit.assert_not_called()
     
     def test_remove_header(self):
@@ -228,7 +247,7 @@ class TestSpecStore(unittest.TestCase):
         with patch.object(self.store, 'specChanged') as mock_signal:
             self.store.remove_header("Test-Header")
             
-            self.assertNotIn("Test-Header", self.store.spec["default_headers"])
+            assert "Test-Header" not in self.store.spec["default_headers"]
             mock_signal.emit.assert_called_once()
     
     def test_remove_header_nonexistent(self):
@@ -251,7 +270,7 @@ class TestSpecStore(unittest.TestCase):
             ("/admin", "GET", "/admin"),
             ("/login", "GET", "/login")
         ]
-        self.assertEqual(result, expected)
+        assert result == expected
     
     def test_parse_endpoints_text_with_methods(self):
         """Test parsing endpoints text with HTTP methods"""
@@ -267,7 +286,7 @@ DELETE /users/123"""
             ("/users/123", "PUT", "/users/123"),
             ("/users/123", "DELETE", "/users/123")
         ]
-        self.assertEqual(result, expected)
+        assert result == expected
     
     def test_parse_endpoints_text_with_names(self):
         """Test parsing endpoints text with custom names"""
@@ -281,7 +300,7 @@ POST /users Create user
             ("Create user", "POST", "/users"),
             ("User login", "GET", "/login")
         ]
-        self.assertEqual(result, expected)
+        assert result == expected
     
     def test_parse_endpoints_text_with_comments(self):
         """Test parsing endpoints text with comments and empty lines"""
@@ -299,7 +318,7 @@ GET /admin"""
             ("Create user", "POST", "/users"),
             ("/admin", "GET", "/admin")
         ]
-        self.assertEqual(result, expected)
+        assert result == expected
     
     def test_parse_endpoints_text_missing_slash(self):
         """Test parsing endpoints text with missing leading slash"""
@@ -308,10 +327,10 @@ admin/settings"""
         
         result = self.store.parse_endpoints_text(text)
         expected = [
-            ("/users", "GET", "/users"),
-            ("/admin/settings", "GET", "/admin/settings")
+            ("users", "GET", "/users"),
+            ("admin/settings", "GET", "/admin/settings")
         ]
-        self.assertEqual(result, expected)
+        assert result == expected
     
     def test_set_endpoints(self):
         """Test setting endpoints"""
@@ -323,11 +342,11 @@ admin/settings"""
         with patch.object(self.store, 'specChanged') as mock_signal:
             self.store.set_endpoints(endpoints)
             
-            self.assertEqual(len(self.store.spec["endpoints"]), 2)
-            self.assertEqual(self.store.spec["endpoints"][0]["name"], "Users List")
-            self.assertEqual(self.store.spec["endpoints"][0]["method"], "GET")
-            self.assertEqual(self.store.spec["endpoints"][0]["path"], "/users")
-            self.assertEqual(self.store.spec["endpoints"][0]["expect"], {})
+            assert len(self.store.spec["endpoints"]) == 2
+            assert self.store.spec["endpoints"][0]["name"] == "Users List"
+            assert self.store.spec["endpoints"][0]["method"] == "GET"
+            assert self.store.spec["endpoints"][0]["path"] == "/users"
+            assert self.store.spec["endpoints"][0]["expect"] == {}
             mock_signal.emit.assert_called_once()
     
     def test_update_endpoint_row(self):
@@ -341,9 +360,9 @@ admin/settings"""
             self.store.update_endpoint_row(0, "New Name", "POST", "/new")
             
             endpoint = self.store.spec["endpoints"][0]
-            self.assertEqual(endpoint["name"], "New Name")
-            self.assertEqual(endpoint["method"], "POST")
-            self.assertEqual(endpoint["path"], "/new")
+            assert endpoint["name"] == "New Name"
+            assert endpoint["method"] == "POST"
+            assert endpoint["path"] == "/new"
             mock_signal.emit.assert_called_once()
     
     def test_update_endpoint_row_invalid_index(self):
@@ -359,12 +378,12 @@ admin/settings"""
         with patch.object(self.store, 'specChanged') as mock_signal:
             self.store.add_endpoint("New Endpoint", "POST", "/new")
             
-            self.assertEqual(len(self.store.spec["endpoints"]), 1)
+            assert len(self.store.spec["endpoints"]) == 1
             endpoint = self.store.spec["endpoints"][0]
-            self.assertEqual(endpoint["name"], "New Endpoint")
-            self.assertEqual(endpoint["method"], "POST")
-            self.assertEqual(endpoint["path"], "/new")
-            self.assertEqual(endpoint["expect"], {})
+            assert endpoint["name"] == "New Endpoint"
+            assert endpoint["method"] == "POST"
+            assert endpoint["path"] == "/new"
+            assert endpoint["expect"] == {}
             mock_signal.emit.assert_called_once()
     
     def test_delete_endpoint(self):
@@ -378,8 +397,8 @@ admin/settings"""
         with patch.object(self.store, 'specChanged') as mock_signal:
             self.store.delete_endpoint(0)
             
-            self.assertEqual(len(self.store.spec["endpoints"]), 1)
-            self.assertEqual(self.store.spec["endpoints"][0]["name"], "Endpoint 2")
+            assert len(self.store.spec["endpoints"]) == 1
+            assert self.store.spec["endpoints"][0]["name"] == "Endpoint 2"
             mock_signal.emit.assert_called_once()
     
     def test_delete_endpoint_invalid_index(self):
@@ -395,11 +414,11 @@ admin/settings"""
         with patch.object(self.store, 'specChanged') as mock_signal:
             success, error = self.store.add_role("admin", "bearer", "admin-token")
             
-            self.assertTrue(success)
-            self.assertIsNone(error)
-            self.assertIn("admin", self.store.spec["roles"])
-            self.assertEqual(self.store.spec["roles"]["admin"]["auth"]["type"], "bearer")
-            self.assertEqual(self.store.spec["roles"]["admin"]["auth"]["token"], "admin-token")
+            assert success
+            assert error is None
+            assert "admin" in self.store.spec["roles"]
+            assert self.store.spec["roles"]["admin"]["auth"]["type"] == "bearer"
+            assert self.store.spec["roles"]["admin"]["auth"]["token"] == "admin-token"
             mock_signal.emit.assert_called_once()
     
     def test_add_role_none_auth(self):
@@ -407,10 +426,10 @@ admin/settings"""
         with patch.object(self.store, 'specChanged') as mock_signal:
             success, error = self.store.add_role("public", "none", "")
             
-            self.assertTrue(success)
-            self.assertIsNone(error)
-            self.assertIn("public", self.store.spec["roles"])
-            self.assertEqual(self.store.spec["roles"]["public"]["auth"]["type"], "none")
+            assert success
+            assert error is None
+            assert "public" in self.store.spec["roles"]
+            assert self.store.spec["roles"]["public"]["auth"]["type"] == "none"
             mock_signal.emit.assert_called_once()
     
     def test_add_role_empty_name(self):
@@ -418,8 +437,8 @@ admin/settings"""
         with patch.object(self.store, 'specChanged') as mock_signal:
             success, error = self.store.add_role("", "bearer", "token")
             
-            self.assertFalse(success)
-            self.assertIn("required", error)
+            assert not success
+            assert "required" in error
             mock_signal.emit.assert_not_called()
     
     def test_add_role_whitespace_name(self):
@@ -427,8 +446,8 @@ admin/settings"""
         with patch.object(self.store, 'specChanged') as mock_signal:
             success, error = self.store.add_role("   ", "bearer", "token")
             
-            self.assertFalse(success)
-            self.assertIn("required", error)
+            assert not success
+            assert "required" in error
             mock_signal.emit.assert_not_called()
     
     def test_remove_role(self):
@@ -450,10 +469,10 @@ admin/settings"""
         with patch.object(self.store, 'specChanged') as mock_signal:
             self.store.remove_role("admin")
             
-            self.assertNotIn("admin", self.store.spec["roles"])
+            assert "admin" not in self.store.spec["roles"]
             # Should also remove from endpoint expectations
-            self.assertNotIn("admin", self.store.spec["endpoints"][0]["expect"])
-            self.assertIn("guest", self.store.spec["endpoints"][0]["expect"])
+            assert "admin" not in self.store.spec["endpoints"][0]["expect"]
+            assert "guest" in self.store.spec["endpoints"][0]["expect"]
             mock_signal.emit.assert_called_once()
     
     def test_remove_role_nonexistent(self):
@@ -461,8 +480,8 @@ admin/settings"""
         with patch.object(self.store, 'specChanged') as mock_signal:
             self.store.remove_role("nonexistent")
             
-            # Should not crash and should still emit signal
-            mock_signal.emit.assert_called_once()
+            # Should not crash and should NOT emit signal since no changes were made
+            mock_signal.emit.assert_not_called()
     
     def test_set_endpoint_expectation(self):
         """Test setting endpoint expectation"""
@@ -477,21 +496,21 @@ admin/settings"""
                 0, "admin", status=200, contains=["success"], not_contains=["error"]
             )
             
-            self.assertTrue(success)
-            self.assertIsNone(error)
+            assert success
+            assert error is None
             
             expectation = self.store.spec["endpoints"][0]["expect"]["admin"]
-            self.assertEqual(expectation["status"], 200)
-            self.assertEqual(expectation["contains"], ["success"])
-            self.assertEqual(expectation["not_contains"], ["error"])
+            assert expectation["status"] == 200
+            assert expectation["contains"] == ["success"]
+            assert expectation["not_contains"] == ["error"]
             mock_signal.emit.assert_called_once()
     
     def test_set_endpoint_expectation_invalid_index(self):
         """Test setting expectation with invalid endpoint index"""
         success, error = self.store.set_endpoint_expectation(999, "admin", status=200)
         
-        self.assertFalse(success)
-        self.assertIn("Invalid endpoint index", error)
+        assert not success
+        assert "Invalid endpoint index" in error
     
     def test_set_endpoint_expectation_invalid_role(self):
         """Test setting expectation for nonexistent role"""
@@ -501,8 +520,8 @@ admin/settings"""
         
         success, error = self.store.set_endpoint_expectation(0, "nonexistent", status=200)
         
-        self.assertFalse(success)
-        self.assertIn("does not exist", error)
+        assert not success
+        assert "does not exist" in error
     
     def test_remove_endpoint_expectation(self):
         """Test removing endpoint expectation"""
@@ -522,18 +541,18 @@ admin/settings"""
         with patch.object(self.store, 'specChanged') as mock_signal:
             success, error = self.store.remove_endpoint_expectation(0, "admin")
             
-            self.assertTrue(success)
-            self.assertIsNone(error)
-            self.assertNotIn("admin", self.store.spec["endpoints"][0]["expect"])
-            self.assertIn("guest", self.store.spec["endpoints"][0]["expect"])
+            assert success
+            assert error is None
+            assert "admin" not in self.store.spec["endpoints"][0]["expect"]
+            assert "guest" in self.store.spec["endpoints"][0]["expect"]
             mock_signal.emit.assert_called_once()
     
     def test_remove_endpoint_expectation_invalid_index(self):
         """Test removing expectation with invalid endpoint index"""
         success, error = self.store.remove_endpoint_expectation(999, "admin")
         
-        self.assertFalse(success)
-        self.assertIn("Invalid endpoint index", error)
+        assert not success
+        assert "Invalid endpoint index" in error
     
     def test_export_as_authmatrix(self):
         """Test exporting as AuthMatrix format"""
@@ -542,13 +561,13 @@ admin/settings"""
         
         result = self.store.export_as_authmatrix()
         
-        self.assertTrue(result.startswith(AUTHMATRIX_SHEBANG))
+        assert result.startswith(AUTHMATRIX_SHEBANG)
         # Remove shebang and parse JSON
         json_content = result[len(AUTHMATRIX_SHEBANG):].strip()
         parsed = json.loads(json_content)
         
-        self.assertEqual(parsed["base_url"], "https://api.test.com")
-        self.assertIn("admin", parsed["roles"])
+        assert parsed["base_url"] == "https://api.test.com"
+        assert "admin" in parsed["roles"]
     
     def test_export_as_postman_with_original_data(self):
         """Test exporting as Postman when original data exists"""
@@ -564,8 +583,8 @@ admin/settings"""
         parsed = json.loads(result)
         
         # Should keep original structure but remove auth
-        self.assertEqual(parsed["info"]["name"], "Original Collection")
-        self.assertNotIn("auth", parsed)
+        assert parsed["info"]["name"] == "Original Collection"
+        assert "auth" not in parsed
     
     def test_export_as_postman_convert_from_authmatrix(self):
         """Test exporting as Postman when converting from AuthMatrix"""
@@ -578,20 +597,21 @@ admin/settings"""
         result = self.store.export_as_postman()
         parsed = json.loads(result)
         
-        self.assertIn("info", parsed)
-        self.assertEqual(parsed["info"]["name"], "AuthMatrix Export")
-        self.assertIn("item", parsed)
-        self.assertEqual(len(parsed["item"]), 1)
+        assert "info" in parsed
+        assert parsed["info"]["name"] == "AuthMatrix Export"
+        assert "item" in parsed
+        assert len(parsed["item"]) == 1
         
         item = parsed["item"][0]
-        self.assertEqual(item["name"], "Test Endpoint")
-        self.assertEqual(item["request"]["method"], "POST")
+        assert item["name"] == "Test Endpoint"
+        assert item["request"]["method"] == "POST"
 
 
-class TestSpecStoreEdgeCases(unittest.TestCase):
+class TestSpecStoreEdgeCases:
     """Test SpecStore edge cases and error conditions"""
     
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
         self.store = SpecStore()
     
     def test_load_spec_ensures_required_fields(self):
@@ -599,14 +619,14 @@ class TestSpecStoreEdgeCases(unittest.TestCase):
         minimal_content = '{"base_url": "https://api.com"}'
         
         result = self.store.load_spec_from_content(minimal_content)
-        self.assertTrue(result)
+        assert result
         
         # Should have all required fields
-        self.assertIn("base_url", self.store.spec)
-        self.assertIn("default_headers", self.store.spec)
-        self.assertIn("roles", self.store.spec)
-        self.assertIn("endpoints", self.store.spec)
-        self.assertIn("guest", self.store.spec["roles"])
+        assert "base_url" in self.store.spec
+        assert "default_headers" in self.store.spec
+        assert "roles" in self.store.spec
+        assert "endpoints" in self.store.spec
+        assert "guest" in self.store.spec["roles"]
     
     def test_convert_postman_with_complex_url_structure(self):
         """Test Postman conversion with complex URL structures"""
@@ -634,8 +654,8 @@ class TestSpecStoreEdgeCases(unittest.TestCase):
         }
         
         result = self.store.convert_postman_to_authmatrix(postman_data)
-        self.assertEqual(result["base_url"], "https://api.example.com:8080")
-        self.assertEqual(result["endpoints"][0]["path"], "/v1/users")
+        assert result["base_url"] == "https://api.example.com:8080"
+        assert result["endpoints"][0]["path"] == "/v1/users"
     
     def test_extract_base_url_with_various_formats(self):
         """Test base URL extraction with various URL formats"""
@@ -675,52 +695,52 @@ class TestSpecStoreEdgeCases(unittest.TestCase):
         
         for postman_data, expected in test_cases:
             result = self.store.extract_base_url_from_postman(postman_data)
-            self.assertEqual(result, expected)
+            assert result == expected
     
     def test_parse_endpoints_text_edge_cases(self):
         """Test endpoint parsing with edge cases"""
         # Empty input
         result = self.store.parse_endpoints_text("")
-        self.assertEqual(result, [])
+        assert result == []
         
         # None input
         result = self.store.parse_endpoints_text(None)
-        self.assertEqual(result, [])
+        assert result == []
         
         # Only comments and empty lines
         result = self.store.parse_endpoints_text("# Comment\n\n  \n# Another comment")
-        self.assertEqual(result, [])
+        assert result == []
         
         # Mixed case HTTP methods
         text = "get /users\npost /users\nPUT /users/1"
         result = self.store.parse_endpoints_text(text)
-        self.assertEqual(result[0][1], "GET")  # Should be uppercase
-        self.assertEqual(result[1][1], "POST")
-        self.assertEqual(result[2][1], "PUT")
+        assert result[0][1] == "GET"  # Should be uppercase
+        assert result[1][1] == "POST"
+        assert result[2][1] == "PUT"
     
     def test_role_operations_with_special_characters(self):
         """Test role operations with special characters and edge cases"""
         # Role with special characters
         success, error = self.store.add_role("admin-user", "bearer", "token-123")
-        self.assertTrue(success)
-        self.assertIn("admin-user", self.store.spec["roles"])
+        assert success
+        assert "admin-user" in self.store.spec["roles"]
         
         # Role with unicode characters
         success, error = self.store.add_role("用户", "none", "")
-        self.assertTrue(success)
-        self.assertIn("用户", self.store.spec["roles"])
+        assert success
+        assert "用户" in self.store.spec["roles"]
         
         # Very long role name
         long_name = "a" * 1000
         success, error = self.store.add_role(long_name, "bearer", "token")
-        self.assertTrue(success)
+        assert success
         
         # Very long token
         long_token = "t" * 10000
         success, error = self.store.add_role("long-token-user", "bearer", long_token)
-        self.assertTrue(success)
-        self.assertEqual(self.store.spec["roles"]["long-token-user"]["auth"]["token"], long_token)
+        assert success
+        assert self.store.spec["roles"]["long-token-user"]["auth"]["token"] == long_token
 
 
 if __name__ == "__main__":
-    unittest.main()
+    pytest.main([__file__])

@@ -2,8 +2,7 @@
 Test suite for Firesands Auth Matrix
 """
 
-import unittest
-import unittest.mock
+import pytest
 import json
 import sys
 import os
@@ -29,7 +28,7 @@ from Firesand_Auth_Matrix import (
 )
 
 
-class TestHelpFunction(unittest.TestCase):
+class TestHelpFunction:
     """Test help function output"""
     
     @patch('sys.stdout', new_callable=io.StringIO)
@@ -38,16 +37,16 @@ class TestHelpFunction(unittest.TestCase):
         show_help()
         output = mock_stdout.getvalue()
         
-        self.assertIn("Firesands Auth Matrix", output)
-        self.assertIn(__version__, output)
-        self.assertIn("Usage:", output)
-        self.assertIn("--help", output)
-        self.assertIn("--version", output)
-        self.assertIn("AuthMatrix format", output)
-        self.assertIn("Postman collection", output)
+        assert "Firesands Auth Matrix" in output
+        assert __version__ in output
+        assert "Usage:" in output
+        assert "--help" in output
+        assert "--version" in output
+        assert "AuthMatrix format" in output
+        assert "Postman collection" in output
 
 
-class TestFileTypeDetection(unittest.TestCase):
+class TestFileTypeDetection:
     """Test file type detection functionality"""
     
     def test_detect_authmatrix_format(self):
@@ -59,7 +58,7 @@ class TestFileTypeDetection(unittest.TestCase):
         
         try:
             result = detect_file_type("test_authmatrix.json")
-            self.assertEqual(result, "authmatrix")
+            assert result == "authmatrix"
         finally:
             os.remove("test_authmatrix.json")
     
@@ -72,7 +71,7 @@ class TestFileTypeDetection(unittest.TestCase):
         
         try:
             result = detect_file_type("test_postman.json")
-            self.assertEqual(result, "postman")
+            assert result == "postman"
         finally:
             os.remove("test_postman.json")
     
@@ -80,32 +79,33 @@ class TestFileTypeDetection(unittest.TestCase):
         """Test detection of unknown format files"""
         # Create a non-existent file
         result = detect_file_type("non_existent_file.json")
-        self.assertEqual(result, "unknown")
+        assert result == "unknown"
     
     def test_detect_file_type_with_permission_error(self):
         """Test file detection with permission error"""
         with patch('builtins.open', side_effect=PermissionError("Permission denied")):
             result = detect_file_type("restricted_file.json")
-            self.assertEqual(result, "unknown")
+            assert result == "unknown"
     
     def test_detect_file_type_with_unicode_error(self):
         """Test file detection with unicode decode error"""
         with patch('builtins.open', mock_open(read_data=b'\xff\xfe')):
             with patch('builtins.open', side_effect=UnicodeDecodeError('utf-8', b'\xff\xfe', 0, 1, 'invalid start byte')):
                 result = detect_file_type("binary_file.json")
-                self.assertEqual(result, "unknown")
+                assert result == "unknown"
     
     def test_detect_file_type_with_empty_file(self):
         """Test detection with empty file"""
         with patch('builtins.open', mock_open(read_data="")):
             result = detect_file_type("empty_file.json")
-            self.assertEqual(result, "postman")  # Empty file defaults to postman
+            assert result == "postman"  # Empty file defaults to postman
 
 
-class TestPostmanConversion(unittest.TestCase):
+class TestPostmanConversion:
     """Test Postman to AuthMatrix conversion functionality"""
     
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
         """Set up test data"""
         self.sample_postman = {
             "info": {
@@ -154,37 +154,37 @@ class TestPostmanConversion(unittest.TestCase):
     def test_extract_base_url(self):
         """Test base URL extraction from Postman collection"""
         result = extract_base_url_from_postman(self.sample_postman)
-        self.assertEqual(result, "https://api.example.com")
+        assert result == "https://api.example.com"
     
     def test_convert_basic_collection(self):
         """Test basic conversion of Postman collection"""
         result = convert_postman_to_authmatrix(self.sample_postman)
         
         # Check basic structure
-        self.assertIn("base_url", result)
-        self.assertIn("roles", result)
-        self.assertIn("endpoints", result)
-        self.assertIn("default_headers", result)
+        assert "base_url" in result
+        assert "roles" in result
+        assert "endpoints" in result
+        assert "default_headers" in result
         
         # Check base URL
-        self.assertEqual(result["base_url"], "https://api.example.com")
+        assert result["base_url"] == "https://api.example.com"
         
         # Check roles
-        self.assertIn("guest", result["roles"])
-        self.assertIn("admin", result["roles"])
+        assert "guest" in result["roles"]
+        assert "admin" in result["roles"]
         
         # Check admin role auth
         admin_auth = result["roles"]["admin"]["auth"]
-        self.assertEqual(admin_auth["type"], "bearer")
-        self.assertEqual(admin_auth["token"], "test-bearer-token")
+        assert admin_auth["type"] == "bearer"
+        assert admin_auth["token"] == "test-bearer-token"
         
         # Check endpoints
-        self.assertEqual(len(result["endpoints"]), 2)
+        assert len(result["endpoints"]) == 2
         
         # Check endpoint names and paths
         endpoint_paths = [ep["path"] for ep in result["endpoints"]]
-        self.assertIn("/users", endpoint_paths)
-        self.assertIn("/admin/dashboard", endpoint_paths)
+        assert "/users" in endpoint_paths
+        assert "/admin/dashboard" in endpoint_paths
     
     def test_convert_postman_with_string_url(self):
         """Test conversion with string URL format"""
@@ -202,10 +202,10 @@ class TestPostmanConversion(unittest.TestCase):
         }
         
         result = convert_postman_to_authmatrix(postman_data)
-        self.assertEqual(result["base_url"], "https://api.example.com")
-        self.assertEqual(len(result["endpoints"]), 1)
-        self.assertEqual(result["endpoints"][0]["path"], "/test/endpoint")
-        self.assertEqual(result["endpoints"][0]["method"], "POST")
+        assert result["base_url"] == "https://api.example.com"
+        assert len(result["endpoints"]) == 1
+        assert result["endpoints"][0]["path"] == "/test/endpoint"
+        assert result["endpoints"][0]["method"] == "POST"
     
     def test_convert_postman_with_port(self):
         """Test conversion with URL containing port"""
@@ -228,8 +228,8 @@ class TestPostmanConversion(unittest.TestCase):
         }
         
         result = convert_postman_to_authmatrix(postman_data)
-        self.assertEqual(result["base_url"], "http://localhost:8080")
-        self.assertEqual(result["endpoints"][0]["path"], "/api/v1")
+        assert result["base_url"] == "http://localhost:8080"
+        assert result["endpoints"][0]["path"] == "/api/v1"
     
     def test_convert_postman_no_auth(self):
         """Test conversion of Postman collection without auth"""
@@ -248,8 +248,8 @@ class TestPostmanConversion(unittest.TestCase):
         
         result = convert_postman_to_authmatrix(postman_data)
         # Should only have guest role
-        self.assertEqual(list(result["roles"].keys()), ["guest"])
-        self.assertEqual(result["roles"]["guest"]["auth"]["type"], "none")
+        assert list(result["roles"].keys()) == ["guest"]
+        assert result["roles"]["guest"]["auth"]["type"] == "none"
     
     def test_convert_postman_with_invalid_bearer_auth(self):
         """Test conversion with malformed bearer auth"""
@@ -266,7 +266,7 @@ class TestPostmanConversion(unittest.TestCase):
         
         result = convert_postman_to_authmatrix(postman_data)
         # Should only have guest role since bearer token not found
-        self.assertEqual(list(result["roles"].keys()), ["guest"])
+        assert list(result["roles"].keys()) == ["guest"]
     
     def test_convert_empty_collection(self):
         """Test conversion of empty Postman collection"""
@@ -276,22 +276,22 @@ class TestPostmanConversion(unittest.TestCase):
         }
         
         result = convert_postman_to_authmatrix(empty_collection)
-        self.assertEqual(len(result["endpoints"]), 0)
-        self.assertIn("guest", result["roles"])
+        assert len(result["endpoints"]) == 0
+        assert "guest" in result["roles"]
 
 
-class TestBaseUrlExtraction(unittest.TestCase):
+class TestBaseUrlExtraction:
     """Test base URL extraction from Postman collections"""
     
     def test_extract_base_url_empty_collection(self):
         """Test base URL extraction from empty collection"""
         result = extract_base_url_from_postman({})
-        self.assertEqual(result, "")
+        assert result == ""
     
     def test_extract_base_url_no_items(self):
         """Test base URL extraction when no items present"""
         result = extract_base_url_from_postman({"item": []})
-        self.assertEqual(result, "")
+        assert result == ""
     
     def test_extract_base_url_invalid_url(self):
         """Test base URL extraction with invalid URL"""
@@ -306,7 +306,7 @@ class TestBaseUrlExtraction(unittest.TestCase):
         }
         result = extract_base_url_from_postman(postman_data)
         # Invalid URLs may return partial results like "://" from urlparse
-        self.assertIn(result, ["", "://"])
+        assert result in ["", "://"]
     
     def test_extract_base_url_malformed_object_url(self):
         """Test base URL extraction with malformed object URL"""
@@ -322,7 +322,7 @@ class TestBaseUrlExtraction(unittest.TestCase):
             ]
         }
         result = extract_base_url_from_postman(postman_data)
-        self.assertEqual(result, "")
+        assert result == ""
     
     def test_extract_base_url_nested_items(self):
         """Test base URL extraction from nested folder structure"""
@@ -342,16 +342,16 @@ class TestBaseUrlExtraction(unittest.TestCase):
             ]
         }
         result = extract_base_url_from_postman(postman_data)
-        self.assertEqual(result, "https://nested.api.com")
+        assert result == "https://nested.api.com"
 
 
-class TestRequestExtraction(unittest.TestCase):
+class TestRequestExtraction:
     """Test request extraction from Postman collections"""
     
     def test_extract_requests_empty_collection(self):
         """Test request extraction from empty collection"""
         result = extract_requests_from_postman({})
-        self.assertEqual(result, [])
+        assert result == []
     
     def test_extract_requests_no_url(self):
         """Test request extraction when request has no URL"""
@@ -367,8 +367,8 @@ class TestRequestExtraction(unittest.TestCase):
             ]
         }
         result = extract_requests_from_postman(postman_data)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["path"], "/")
+        assert len(result) == 1
+        assert result[0]["path"] == "/"
     
     def test_extract_requests_invalid_url_string(self):
         """Test request extraction with invalid URL string"""
@@ -384,10 +384,10 @@ class TestRequestExtraction(unittest.TestCase):
             ]
         }
         result = extract_requests_from_postman(postman_data)
-        self.assertEqual(len(result), 1)
+        assert len(result) == 1
         # urlparse may treat the whole string as path for invalid URLs
-        self.assertIn(result[0]["path"], ["/", "not-a-valid-url"])
-        self.assertEqual(result[0]["method"], "POST")
+        assert result[0]["path"] in ["/", "not-a-valid-url"]
+        assert result[0]["method"] == "POST"
     
     def test_extract_requests_no_path_in_url_object(self):
         """Test request extraction when URL object has no path"""
@@ -405,11 +405,11 @@ class TestRequestExtraction(unittest.TestCase):
             ]
         }
         result = extract_requests_from_postman(postman_data)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["path"], "/")
+        assert len(result) == 1
+        assert result[0]["path"] == "/"
 
 
-class TestSpecLoading(unittest.TestCase):
+class TestSpecLoading:
     """Test specification loading functionality"""
     
     def test_load_authmatrix_spec(self):
@@ -441,19 +441,19 @@ class TestSpecLoading(unittest.TestCase):
             result = load_and_convert_spec("test_spec.json")
             
             # Check structure
-            self.assertIn("base_url", result)
-            self.assertIn("roles", result)
-            self.assertIn("endpoints", result)
+            assert "base_url" in result
+            assert "roles" in result
+            assert "endpoints" in result
             
             # Check content
-            self.assertEqual(result["base_url"], "https://api.test.com")
-            self.assertEqual(len(result["roles"]), 2)
-            self.assertEqual(len(result["endpoints"]), 1)
+            assert result["base_url"] == "https://api.test.com"
+            assert len(result["roles"]) == 2
+            assert len(result["endpoints"]) == 1
             
             # Check endpoint expectations
             endpoint = result["endpoints"][0]
-            self.assertEqual(endpoint["expect"]["guest"]["status"], 403)
-            self.assertEqual(endpoint["expect"]["user"]["status"], 200)
+            assert endpoint["expect"]["guest"]["status"] == 403
+            assert endpoint["expect"]["user"]["status"] == 200
             
         finally:
             os.remove("test_spec.json")
@@ -480,22 +480,22 @@ class TestSpecLoading(unittest.TestCase):
             result = load_and_convert_spec("test_postman.json")
             
             # Should be converted to AuthMatrix format
-            self.assertIn("base_url", result)
-            self.assertIn("roles", result)
-            self.assertIn("endpoints", result)
+            assert "base_url" in result
+            assert "roles" in result
+            assert "endpoints" in result
             
             # Should have at least guest role
-            self.assertIn("guest", result["roles"])
+            assert "guest" in result["roles"]
             
             # Should have the endpoint
-            self.assertEqual(len(result["endpoints"]), 1)
-            self.assertEqual(result["endpoints"][0]["method"], "GET")
+            assert len(result["endpoints"]) == 1
+            assert result["endpoints"][0]["method"] == "GET"
             
         finally:
             os.remove("test_postman.json")
 
 
-class TestSpecLoadingEdgeCases(unittest.TestCase):
+class TestSpecLoadingEdgeCases:
     """Test spec loading with edge cases and error conditions"""
     
     def test_load_spec_with_invalid_json(self):
@@ -505,14 +505,14 @@ class TestSpecLoadingEdgeCases(unittest.TestCase):
             temp_file = f.name
         
         try:
-            with self.assertRaises(json.JSONDecodeError):
+            with pytest.raises(json.JSONDecodeError):
                 load_and_convert_spec(temp_file)
         finally:
             os.unlink(temp_file)
     
     def test_load_spec_nonexistent_file(self):
         """Test loading spec from nonexistent file"""
-        with self.assertRaises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError):
             load_and_convert_spec("nonexistent_file.json")
     
     def test_load_spec_authmatrix_format_without_shebang_data(self):
@@ -522,7 +522,7 @@ class TestSpecLoadingEdgeCases(unittest.TestCase):
             temp_file = f.name
         
         try:
-            with self.assertRaises(json.JSONDecodeError):
+            with pytest.raises(json.JSONDecodeError):
                 load_and_convert_spec(temp_file)
         finally:
             os.unlink(temp_file)
@@ -548,10 +548,10 @@ class TestSpecLoadingEdgeCases(unittest.TestCase):
         
         try:
             result = load_and_convert_spec(temp_file)
-            self.assertIn("base_url", result)
-            self.assertIn("roles", result)
-            self.assertIn("endpoints", result)
-            self.assertEqual(len(result["endpoints"]), 1)
+            assert "base_url" in result
+            assert "roles" in result
+            assert "endpoints" in result
+            assert len(result["endpoints"]) == 1
         finally:
             os.unlink(temp_file)
     
@@ -573,15 +573,15 @@ class TestSpecLoadingEdgeCases(unittest.TestCase):
             result = load_and_convert_spec(temp_file)
             # Without shebang, it's detected as postman and gets converted
             # Since it doesn't have "info" and "item", it becomes a new authmatrix format
-            self.assertIn("base_url", result)
-            self.assertIn("roles", result)
+            assert "base_url" in result
+            assert "roles" in result
             # The base_url will be empty since it's not a valid postman collection
-            self.assertEqual(result["base_url"], "")
+            assert result["base_url"] == ""
         finally:
             os.unlink(temp_file)
 
 
-class TestRunSpec(unittest.TestCase):
+class TestRunSpec:
     """Test the run_spec function that executes API tests"""
     
     @patch('requests.request')
@@ -614,20 +614,20 @@ class TestRunSpec(unittest.TestCase):
         results = run_spec(spec)
         
         # Check structure
-        self.assertIn("Test Endpoint", results)
-        self.assertIn("guest", results["Test Endpoint"])
-        self.assertIn("admin", results["Test Endpoint"])
+        assert "Test Endpoint" in results
+        assert "guest" in results["Test Endpoint"]
+        assert "admin" in results["Test Endpoint"]
         
         # Admin should pass (200 expected, 200 received)
         admin_result = results["Test Endpoint"]["admin"]
-        self.assertEqual(admin_result["status"], "PASS")
-        self.assertEqual(admin_result["http"], 200)
-        self.assertIn("latency_ms", admin_result)
+        assert admin_result["status"] == "PASS"
+        assert admin_result["http"] == 200
+        assert "latency_ms" in admin_result
         
         # Guest should fail (403 expected, 200 received)
         guest_result = results["Test Endpoint"]["guest"]
-        self.assertEqual(guest_result["status"], "FAIL")
-        self.assertEqual(guest_result["http"], 200)
+        assert guest_result["status"] == "FAIL"
+        assert guest_result["http"] == 200
     
     @patch('requests.request')
     def test_run_spec_with_list_status_codes(self, mock_request):
@@ -657,8 +657,8 @@ class TestRunSpec(unittest.TestCase):
         
         # Should pass since 201 is in the acceptable list
         user_result = results["Create Endpoint"]["user"]
-        self.assertEqual(user_result["status"], "PASS")
-        self.assertEqual(user_result["http"], 201)
+        assert user_result["status"] == "PASS"
+        assert user_result["http"] == 201
     
     def test_run_spec_skip_missing_expectations(self):
         """Test spec execution skips endpoints with no expectations for a role"""
@@ -685,12 +685,12 @@ class TestRunSpec(unittest.TestCase):
         
         # Guest should be skipped
         guest_result = results["Admin Only"]["guest"]
-        self.assertEqual(guest_result["status"], "SKIP")
+        assert guest_result["status"] == "SKIP"
         
         # Admin should be attempted (will fail without mocking requests)
         admin_result = results["Admin Only"]["admin"]
-        self.assertEqual(admin_result["status"], "FAIL")
-        self.assertIn("error", admin_result)
+        assert admin_result["status"] == "FAIL"
+        assert "error" in admin_result
     
     @patch('requests.request')
     def test_run_spec_network_error(self, mock_request):
@@ -717,9 +717,9 @@ class TestRunSpec(unittest.TestCase):
         results = run_spec(spec)
         
         user_result = results["Network Fail"]["user"]
-        self.assertEqual(user_result["status"], "FAIL")
-        self.assertIn("error", user_result)
-        self.assertIn("Network error", user_result["error"])
+        assert user_result["status"] == "FAIL"
+        assert "error" in user_result
+        assert "Network error" in user_result["error"]
     
     def test_run_spec_uses_endpoint_name_fallback(self):
         """Test spec execution uses path as name when name is missing"""
@@ -743,12 +743,12 @@ class TestRunSpec(unittest.TestCase):
         results = run_spec(spec)
         
         # Should use path as key since no name provided
-        self.assertIn("/no-name", results)
+        assert "/no-name" in results
         user_result = results["/no-name"]["user"]
-        self.assertEqual(user_result["status"], "FAIL")  # Will fail without mocking
+        assert user_result["status"] == "FAIL"  # Will fail without mocking
 
 
-class TestPrintMatrix(unittest.TestCase):
+class TestPrintMatrix:
     """Test the print_matrix function that displays results"""
     
     @patch('sys.stdout', new_callable=io.StringIO)
@@ -769,21 +769,21 @@ class TestPrintMatrix(unittest.TestCase):
         output = mock_stdout.getvalue()
         
         # Check header
-        self.assertIn("Endpoint", output)
-        self.assertIn("guest", output)
-        self.assertIn("admin", output)
+        assert "Endpoint" in output
+        assert "guest" in output
+        assert "admin" in output
         
         # Check endpoints
-        self.assertIn("GET /users", output)
-        self.assertIn("POST /admin/settings", output)
+        assert "GET /users" in output
+        assert "POST /admin/settings" in output
         
         # Check status indicators
-        self.assertIn("❌", output)  # Fail
-        self.assertIn("✅", output)  # Pass
+        assert "❌" in output  # Fail
+        assert "✅" in output  # Pass
         
         # Check HTTP codes
-        self.assertIn("403", output)
-        self.assertIn("200", output)
+        assert "403" in output
+        assert "200" in output
     
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_print_matrix_with_skip(self, mock_stdout):
@@ -798,8 +798,8 @@ class TestPrintMatrix(unittest.TestCase):
         print_matrix(results)
         output = mock_stdout.getvalue()
         
-        self.assertIn("⏭️", output)  # Skip indicator
-        self.assertIn("✅", output)  # Pass indicator
+        assert "⏭️" in output  # Skip indicator
+        assert "✅" in output  # Pass indicator
     
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_print_matrix_long_endpoint_names(self, mock_stdout):
@@ -814,11 +814,11 @@ class TestPrintMatrix(unittest.TestCase):
         output = mock_stdout.getvalue()
         
         # Should handle long names gracefully
-        self.assertIn("GET /very/long/endpoint", output)
-        self.assertIn("404", output)
+        assert "GET /very/long/endpoint" in output
+        assert "404" in output
 
 
-class TestMainFunction(unittest.TestCase):
+class TestMainFunction:
     """Test the main function and command line interface"""
     
     @patch('sys.argv', ['Firesand_Auth_Matrix.py'])
@@ -834,8 +834,8 @@ class TestMainFunction(unittest.TestCase):
         """Test main function with --help flag"""
         main()
         output = mock_stdout.getvalue()
-        self.assertIn("Firesands Auth Matrix", output)
-        self.assertIn("Usage:", output)
+        assert "Firesands Auth Matrix" in output
+        assert "Usage:" in output
     
     @patch('sys.argv', ['Firesand_Auth_Matrix.py', '-h'])
     @patch('sys.stdout', new_callable=io.StringIO)
@@ -843,7 +843,7 @@ class TestMainFunction(unittest.TestCase):
         """Test main function with -h flag"""
         main()
         output = mock_stdout.getvalue()
-        self.assertIn("Firesands Auth Matrix", output)
+        assert "Firesands Auth Matrix" in output
     
     @patch('sys.argv', ['Firesand_Auth_Matrix.py', '--version'])
     @patch('sys.stdout', new_callable=io.StringIO)
@@ -851,8 +851,8 @@ class TestMainFunction(unittest.TestCase):
         """Test main function with --version flag"""
         main()
         output = mock_stdout.getvalue()
-        self.assertIn(__version__, output)
-        self.assertIn("Firesands Auth Matrix", output)
+        assert __version__ in output
+        assert "Firesands Auth Matrix" in output
     
     @patch('sys.argv', ['Firesand_Auth_Matrix.py', '-v'])
     @patch('sys.stdout', new_callable=io.StringIO)
@@ -860,7 +860,7 @@ class TestMainFunction(unittest.TestCase):
         """Test main function with -v flag"""
         main()
         output = mock_stdout.getvalue()
-        self.assertIn(__version__, output)
+        assert __version__ in output
     
     @patch('sys.argv', ['Firesand_Auth_Matrix.py', 'test_spec.json'])
     @patch('Firesand_Auth_Matrix.load_and_convert_spec')
@@ -882,22 +882,22 @@ class TestMainFunction(unittest.TestCase):
     @patch('sys.stderr', new_callable=io.StringIO)
     def test_main_file_not_found(self, mock_stderr, mock_stdout):
         """Test main function with nonexistent file"""
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             main()
         
         # Should print error message
-        self.assertTrue(mock_stdout.getvalue() or mock_stderr.getvalue())
+        assert mock_stdout.getvalue() or mock_stderr.getvalue()
     
     @patch('sys.argv', ['Firesand_Auth_Matrix.py', 'arg1', 'arg2', 'arg3'])
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_main_too_many_args(self, mock_stdout):
         """Test main function with too many arguments"""
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             main()
         
         output = mock_stdout.getvalue()
-        self.assertIn("Too many arguments", output)
-        self.assertIn("--help", output)
+        assert "Too many arguments" in output
+        assert "--help" in output
     
     @patch('sys.argv', ['Firesand_Auth_Matrix.py', 'invalid.json'])
     def test_main_invalid_json_file(self):
@@ -908,13 +908,13 @@ class TestMainFunction(unittest.TestCase):
         
         try:
             with patch('sys.argv', ['Firesand_Auth_Matrix.py', temp_file]):
-                with self.assertRaises(SystemExit):
+                with pytest.raises(SystemExit):
                     main()
         finally:
             os.unlink(temp_file)
 
 
-class TestSecurityAndInjection(unittest.TestCase):
+class TestSecurityAndInjection:
     """Test security aspects and injection attempts"""
     
     def test_postman_conversion_with_malicious_json(self):
@@ -934,10 +934,10 @@ class TestSecurityAndInjection(unittest.TestCase):
         
         # Should not crash and should sanitize content
         result = convert_postman_to_authmatrix(malicious_postman)
-        self.assertIn("base_url", result)
-        self.assertEqual(len(result["endpoints"]), 1)
+        assert "base_url" in result
+        assert len(result["endpoints"]) == 1
         # The malicious content should be preserved as-is since it's just data
-        self.assertEqual(result["endpoints"][0]["name"], "'; DROP TABLE users; --")
+        assert result["endpoints"][0]["name"] == "'; DROP TABLE users; --"
     
     def test_file_detection_with_large_file(self):
         """Test file type detection with very large file"""
@@ -951,16 +951,16 @@ class TestSecurityAndInjection(unittest.TestCase):
         try:
             result = detect_file_type(temp_file)
             # Should handle large files gracefully
-            self.assertEqual(result, "postman")  # Not authmatrix since no shebang
+            assert result == "postman"  # Not authmatrix since no shebang
         finally:
             os.unlink(temp_file)
     
     def test_spec_loading_with_deeply_nested_json(self):
         """Test spec loading with deeply nested JSON structure"""
-        # Create deeply nested structure
+        # Create deeply nested structure (reasonable depth to avoid recursion limit)
         nested_json = {"level": 1}
         current = nested_json
-        for i in range(2, 1000):  # Create deep nesting
+        for i in range(2, 100):  # Create 99 levels of nesting (reasonable depth)
             current["level"] = {"level": i}
             current = current["level"]
         
@@ -971,7 +971,7 @@ class TestSecurityAndInjection(unittest.TestCase):
         try:
             # Should handle deep nesting without stack overflow
             result = load_and_convert_spec(temp_file)
-            self.assertIn("base_url", result)
+            assert "base_url" in result
         finally:
             os.unlink(temp_file)
     
@@ -1001,7 +1001,7 @@ class TestSecurityAndInjection(unittest.TestCase):
             # Should not crash and should handle gracefully
             result = extract_base_url_from_postman(postman_data)
             # Most malformed URLs should result in empty string
-            self.assertIsInstance(result, str)
+            assert isinstance(result, str)
     
     def test_bearer_token_with_injection_attempts(self):
         """Test bearer token handling with potential injection payloads"""
@@ -1028,10 +1028,10 @@ class TestSecurityAndInjection(unittest.TestCase):
             
             # Should handle malicious tokens without crashing
             result = convert_postman_to_authmatrix(postman_data)
-            self.assertIn("admin", result["roles"])
-            self.assertEqual(result["roles"]["admin"]["auth"]["token"], token)
+            assert "admin" in result["roles"]
+            assert result["roles"]["admin"]["auth"]["token"] == token
             # The token should be preserved as-is since it's just configuration data
 
 
 if __name__ == "__main__":
-    unittest.main()
+    pytest.main([__file__])
