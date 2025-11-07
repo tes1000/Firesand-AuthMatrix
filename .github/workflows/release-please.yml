@@ -4,7 +4,7 @@ on:
   push:
     branches: [release] 
   pull_request:
-    branches: [ release ]    
+    branches: [release]    
 
 permissions:
   contents: write
@@ -22,6 +22,7 @@ jobs:
         with:
           release-type: python
           package-name: firesands-auth-matrix
+          target-branch: release
 
   build-and-upload:
     needs: release-please
