@@ -1,5 +1,5 @@
 from __future__ import annotations
-import json, sys, time, multiprocessing, pickle
+import json, sys, time, multiprocessing, pickle, os
 from typing import Dict, Any, Optional, Callable, List
 import requests
 
@@ -561,7 +561,7 @@ class ExportDialog(QtWidgets.QDialog):
         self.store = store
         self.setWindowTitle("Export Specification")
         self.setModal(True)
-        self.resize(320, 160)
+        self.resize(320, 200)
         
         layout = QtWidgets.QVBoxLayout(self)
         
@@ -579,6 +579,11 @@ class ExportDialog(QtWidgets.QDialog):
         postman_btn.clicked.connect(self._export_postman)
         layout.addWidget(postman_btn)
         
+        postman_multi_btn = QtWidgets.QPushButton("Export as Multiple Postman Collections")
+        postman_multi_btn.setToolTip("Exports as separate Postman collections per role with role-specific auth")
+        postman_multi_btn.clicked.connect(self._export_postman_collections)
+        layout.addWidget(postman_multi_btn)
+        
         cancel_btn = QtWidgets.QPushButton("Cancel")
         cancel_btn.clicked.connect(self.reject)
         layout.addWidget(cancel_btn)
@@ -592,6 +597,151 @@ class ExportDialog(QtWidgets.QDialog):
         content = self.store.export_as_postman()
         show_text(self.parent(), "Postman Collection Export", content)
         self.accept()
+    
+    def _export_postman_collections(self):
+        """Export as multiple Postman collections, one per role"""
+        collections = self.store.export_as_postman_collections()
+        
+        if not collections:
+            QtWidgets.QMessageBox.information(
+                self,
+                "Export Multiple Collections",
+                "No collections to export. Make sure you have configured role expectations for endpoints."
+            )
+            return
+        
+        # Show dialog to select where to save the collections
+        dialog = MultiCollectionExportDialog(collections, self)
+        if dialog.exec() == QtWidgets.QDialog.Accepted:
+            self.accept()
+        else:
+            # User cancelled, but we stay in the export dialog
+            pass
+
+
+class MultiCollectionExportDialog(QtWidgets.QDialog):
+    """Dialog for viewing and saving multiple Postman collections"""
+    
+    def __init__(self, collections: Dict[str, str], parent=None):
+        super().__init__(parent)
+        self.collections = collections
+        self.setWindowTitle("Export Multiple Postman Collections")
+        self.setModal(True)
+        self.resize(600, 500)
+        
+        layout = QtWidgets.QVBoxLayout(self)
+        
+        # Info label
+        info_label = QtWidgets.QLabel(
+            f"Generated {len(collections)} Postman collection(s), one per role.\n"
+            "Each collection contains only endpoints where the role expects success (2xx status)."
+        )
+        info_label.setWordWrap(True)
+        layout.addWidget(info_label)
+        
+        # Tab widget to show each collection
+        tabs = QtWidgets.QTabWidget()
+        layout.addWidget(tabs)
+        
+        # Create a tab for each collection
+        for role_name, collection_json in collections.items():
+            tab = QtWidgets.QWidget()
+            tab_layout = QtWidgets.QVBoxLayout(tab)
+            
+            # Parse to get collection info
+            try:
+                collection_data = json.loads(collection_json)
+                item_count = len(collection_data.get("item", []))
+                has_auth = "auth" in collection_data
+                
+                info = f"Collection: {collection_data['info']['name']}\n"
+                info += f"Endpoints: {item_count}\n"
+                info += f"Authentication: {'Yes' if has_auth else 'No'}"
+                
+                info_widget = QtWidgets.QLabel(info)
+                tab_layout.addWidget(info_widget)
+            except:
+                pass
+            
+            # Text edit to show the JSON
+            text_edit = QtWidgets.QPlainTextEdit()
+            text_edit.setPlainText(collection_json)
+            text_edit.setReadOnly(True)
+            text_edit.setFont(QtGui.QFont("Courier", 9))
+            tab_layout.addWidget(text_edit)
+            
+            # Add save button for this collection
+            save_btn = QtWidgets.QPushButton(f"Save {role_name.capitalize()} Collection...")
+            save_btn.clicked.connect(lambda checked, r=role_name, c=collection_json: self._save_collection(r, c))
+            tab_layout.addWidget(save_btn)
+            
+            tabs.addTab(tab, role_name.capitalize())
+        
+        # Buttons at bottom
+        button_layout = QtWidgets.QHBoxLayout()
+        
+        save_all_btn = QtWidgets.QPushButton("Save All Collections...")
+        save_all_btn.clicked.connect(self._save_all_collections)
+        button_layout.addWidget(save_all_btn)
+        
+        close_btn = QtWidgets.QPushButton("Close")
+        close_btn.clicked.connect(self.accept)
+        button_layout.addWidget(close_btn)
+        
+        layout.addLayout(button_layout)
+    
+    def _save_collection(self, role_name: str, collection_json: str):
+        """Save a single collection to a file"""
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self,
+            f"Save {role_name.capitalize()} Collection",
+            f"{role_name}.postman_collection.json",
+            "JSON Files (*.json);;All Files (*)"
+        )
+        
+        if filename:
+            try:
+                with open(filename, 'w', encoding='utf-8') as f:
+                    f.write(collection_json)
+                QtWidgets.QMessageBox.information(
+                    self,
+                    "Success",
+                    f"Collection saved to {filename}"
+                )
+            except Exception as e:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    "Error",
+                    f"Failed to save collection: {str(e)}"
+                )
+    
+    def _save_all_collections(self):
+        """Save all collections to a directory"""
+        directory = QtWidgets.QFileDialog.getExistingDirectory(
+            self,
+            "Select Directory to Save All Collections"
+        )
+        
+        if directory:
+            try:
+                saved_files = []
+                for role_name, collection_json in self.collections.items():
+                    filename = os.path.join(directory, f"{role_name}.postman_collection.json")
+                    with open(filename, 'w', encoding='utf-8') as f:
+                        f.write(collection_json)
+                    saved_files.append(filename)
+                
+                QtWidgets.QMessageBox.information(
+                    self,
+                    "Success",
+                    f"Saved {len(saved_files)} collection(s) to {directory}"
+                )
+            except Exception as e:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    "Error",
+                    f"Failed to save collections: {str(e)}"
+                )
 
 
 class ImportDialog(QtWidgets.QDialog):

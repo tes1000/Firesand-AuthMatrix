@@ -241,6 +241,90 @@ class SpecStore(QtCore.QObject):
         
         return postman_collection
 
+    def export_as_postman_collections(self) -> Dict[str, str]:
+        """
+        Export as multiple Postman collections, one per role.
+        
+        Each collection includes:
+        - Role-specific authentication configuration
+        - Only endpoints that expect success (2xx status) for that role
+        
+        Returns:
+            Dict mapping role names to JSON collection strings
+        """
+        collections = {}
+        
+        for role_name, role_config in self.spec.get("roles", {}).items():
+            # Create collection for this role
+            collection_name = f"{role_name.capitalize()} Collection"
+            postman_collection = {
+                "info": {
+                    "name": collection_name,
+                    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                },
+                "item": []
+            }
+            
+            # Add role-specific authentication
+            auth_config = role_config.get("auth", {})
+            if auth_config.get("type") == "bearer":
+                postman_collection["auth"] = {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": auth_config.get("token", ""),
+                            "type": "string"
+                        }
+                    ]
+                }
+            # If auth type is "none", we don't add auth field
+            
+            # Add endpoints that expect success for this role
+            for endpoint in self.spec.get("endpoints", []):
+                # Check if this endpoint has an expectation for this role
+                expectations = endpoint.get("expect", {})
+                role_expectation = expectations.get(role_name)
+                
+                # Include endpoint if:
+                # 1. There's an expectation for this role AND
+                # 2. The expected status is a success code (2xx)
+                if role_expectation:
+                    expected_status = role_expectation.get("status")
+                    # Handle both single status code and list of status codes
+                    if expected_status is not None:
+                        status_list = [expected_status] if isinstance(expected_status, int) else expected_status
+                        # Include if any expected status is in 2xx range
+                        if any(200 <= s < 300 for s in status_list):
+                            item = {
+                                "name": endpoint.get("name", endpoint.get("path", "")),
+                                "request": {
+                                    "method": endpoint.get("method", "GET"),
+                                    "url": {
+                                        "raw": f"{self.spec.get('base_url', '')}{endpoint.get('path', '')}",
+                                        "host": self.spec.get('base_url', '').replace('https://', '').replace('http://', '').split('/')[0].split('.'),
+                                        "path": endpoint.get('path', '/').strip('/').split('/') if endpoint.get('path', '/') != '/' else []
+                                    },
+                                    "header": []
+                                }
+                            }
+                            
+                            # Add default headers (but not auth headers - auth is at collection level)
+                            for key, value in self.spec.get("default_headers", {}).items():
+                                if key.lower() != "authorization":
+                                    item["request"]["header"].append({
+                                        "key": key,
+                                        "value": value
+                                    })
+                            
+                            postman_collection["item"].append(item)
+            
+            # Only add collection if it has at least one endpoint
+            if postman_collection["item"]:
+                collections[role_name] = json.dumps(postman_collection, indent=2)
+        
+        return collections
+
     # project
     def set_base_url(self, url: str):
         self.spec["base_url"] = (url or "").strip()
