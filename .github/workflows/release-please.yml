@@ -1,0 +1,84 @@
+@ -1,83 +0,0 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        id: release
+        with:
+          release-type: python
+          package-name: firesands-auth-matrix
+
+  build-and-upload:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset_name: AuthMatrix-linux
+          - os: windows-latest
+            asset_name: AuthMatrix-windows.exe
+          - os: macos-latest
+            asset_name: AuthMatrix-macos
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build executable
+      run: |
+        pyinstaller AuthMatrix.spec
+
+    - name: Upload Release Asset
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: bash
+      run: |
+        TAG_NAME="${{ needs.release-please.outputs.tag_name }}"
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          ASSET_PATH="dist/AuthMatrix.exe"
+        else
+          ASSET_PATH="dist/AuthMatrix"
+        fi
+        gh release upload "$TAG_NAME" "$ASSET_PATH" --clobber
+        
+    - name: Rename and re-upload with OS-specific name
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: bash
+      run: |
+        TAG_NAME="${{ needs.release-please.outputs.tag_name }}"
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          cp dist/AuthMatrix.exe dist/${{ matrix.asset_name }}
+        else
+          cp dist/AuthMatrix dist/${{ matrix.asset_name }}
+        fi
+        gh release upload "$TAG_NAME" "dist/${{ matrix.asset_name }}" --clobber
