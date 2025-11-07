@@ -1,0 +1,23 @@
+{
+  "name": "firesands-auth-matrix",
+  "version": "1.0.0",
+  "description": "A comprehensive tool for testing API authorization matrices across different user roles and endpoints",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tes1000/Firesand-AuthMatrix.git"
+  },
+  "keywords": [
+    "api",
+    "testing",
+    "authorization",
+    "security",
+    "postman",
+    "authentication"
+  ],
+  "author": "Firesands Auth Matrix Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tes1000/Firesand-AuthMatrix/issues"
+  },
+  "homepage": "https://github.com/tes1000/Firesand-AuthMatrix#readme"
+}

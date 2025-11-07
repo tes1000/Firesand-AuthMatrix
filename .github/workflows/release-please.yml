@@ -1,10 +1,9 @@
-@ -1,83 +0,0 @@
 name: Release Please
 
 on:
   push:
     branches:
-      - main
+      - release
 
 permissions:
   contents: write
@@ -21,6 +20,7 @@ jobs:
         id: release
         with:
           release-type: python
+          branch: release
           package-name: firesands-auth-matrix
 
   build-and-upload:

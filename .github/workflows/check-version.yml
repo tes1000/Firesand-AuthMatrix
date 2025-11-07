@@ -1,0 +1,26 @@
+name: Check Version Bump
+
+on:
+  pull_request:
+    branches:
+      - release
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check version change
+        run: |
+          git fetch origin release:release || true
+          if git diff origin/release...HEAD -- pyproject.toml | grep 'version ='; then
+            echo "✅ Version bump detected in pyproject.toml"
+            exit 0
+          else
+            echo "❌ ERROR: version bump required in pyproject.toml before merging to release branch"
+            exit 1
+          fi
