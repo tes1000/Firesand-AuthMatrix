@@ -33,8 +33,6 @@ jobs:
             asset_name: AuthMatrix-linux
           - os: windows-latest
             asset_name: AuthMatrix-windows.exe
-          - os: macos-latest
-            asset_name: AuthMatrix-macos
 
     steps:
     - uses: actions/checkout@v4
