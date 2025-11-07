@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/tes1000/Firesand-AuthMatrix/compare/v0.1.0...v1.0.0) (2025-11-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* second release ([#11](https://github.com/tes1000/Firesand-AuthMatrix/issues/11))
+
+### Bug Fixes
+
+* second release ([#11](https://github.com/tes1000/Firesand-AuthMatrix/issues/11)) ([15c00ed](https://github.com/tes1000/Firesand-AuthMatrix/commit/15c00ed9297a1562062a0310ac1dcb17a6fb54c4))
+
 ## 0.1.0 (2025-11-07)
 
 

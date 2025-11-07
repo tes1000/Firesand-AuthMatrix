@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "firesands-auth-matrix"
-version = "0.1.0"
+version = "1.0.0"
 description = "A comprehensive tool for testing API authorization matrices across different user roles and endpoints"
 readme = "README.md"
 license = {text = "MIT"}
