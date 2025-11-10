@@ -13,14 +13,28 @@ A comprehensive tool for testing API authorization matrices across different use
 
 ## Installation
 
-### Prerequisites
+### From GitHub Packages
+
+Install the latest release from GitHub Packages:
+
+```bash
+pip install firesands-auth-matrix --index-url https://upload.pypi.org/legacy/
+```
+
+### From Source
+
+Clone the repository and install dependencies:
+
+#### Prerequisites
 
 - Python 3.8 or higher
 - pip package manager
 
-### Install Dependencies
+#### Install Dependencies
 
 ```bash
+git clone https://github.com/tes1000/Firesand-AuthMatrix.git
+cd Firesand-AuthMatrix
 pip install -r requirements.txt
 ```
 
