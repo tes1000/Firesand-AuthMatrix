@@ -3,10 +3,11 @@ from ..views.SpecStore import SpecStore
 from ..views.Tokens import TokensSection
 from ..views.Endpoints import EndpointsSection
 from ..views.Headers import KVRow
+from ..views.Results import ResultsSection
 
 
 class TabsComponent(QtWidgets.QTabWidget):
-    """Tab widget containing Headers, Endpoints, and Tokens/Roles sections."""
+    """Tab widget containing Headers, Endpoints, Tokens/Roles, and Results sections."""
     
     def __init__(self, store: SpecStore, parent=None):
         super().__init__(parent)
@@ -20,11 +21,13 @@ class TabsComponent(QtWidgets.QTabWidget):
         )
         self.endpoints = EndpointsSection(self.store)
         self.tokens = TokensSection(self.store)
+        self.results = ResultsSection()
         
         # Add tabs
         self.addTab(self.endpoints, "Endpoints")
         self.addTab(self.tokens, "Tokens / Roles")
         self.addTab(self.headers, "Headers")
+        self.addTab(self.results, "Results")
 
     
     def get_headers(self) -> KVRow:
@@ -38,3 +41,7 @@ class TabsComponent(QtWidgets.QTabWidget):
     def get_tokens(self) -> TokensSection:
         """Get the tokens section."""
         return self.tokens
+    
+    def get_results(self) -> ResultsSection:
+        """Get the results section."""
+        return self.results

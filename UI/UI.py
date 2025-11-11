@@ -105,26 +105,17 @@ class MainWindow(QtWidgets.QMainWindow):
         apply_animation_properties(self.baseUrlEdit)
         vlayout.addWidget(self.baseUrlEdit)
 
-        # Tabs for Headers, Endpoints, Tokens
+        # Tabs for Headers, Endpoints, Tokens, Results
         self.tabs = TabsComponent(self.store)
         self.tabs.setMinimumHeight(300)  # Ensure tabs have reasonable minimum height
         apply_animation_properties(self.tabs)
-        vlayout.addWidget(self.tabs, 2)  # Give tabs more relative space
+        vlayout.addWidget(self.tabs, 1)  # Give tabs all available space
 
         # Convenience properties to access sections
         self.headers = self.tabs.get_headers()
         self.endpoints = self.tabs.get_endpoints()
         self.tokens = self.tabs.get_tokens()
-
-        # Results section below tabs
-        results_label = QtWidgets.QLabel("<b>Results</b>")
-        results_label.setProperty("class", "title")
-        vlayout.addWidget(results_label)
-        
-        self.resultsView = ResultsSection()
-        self.resultsView.setMinimumHeight(200)  # Ensure results have reasonable minimum height
-        apply_animation_properties(self.resultsView)
-        vlayout.addWidget(self.resultsView, 1)  # Give results less relative space than tabs
+        self.resultsView = self.tabs.get_results()
 
         # wire header actions
         self.header.importRequested.connect(self._import_spec)
