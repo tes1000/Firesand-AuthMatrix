@@ -960,8 +960,8 @@ class ImportDialog(QtWidgets.QDialog):
         self.store = store
         self.setWindowTitle("Import API Specification")
         self.setModal(True)
-        self.setMinimumSize(500, 400)
-        self._size_dialog_to_parent(0.7, 0.7)
+        self.setMinimumSize(400, 250)
+        self._size_dialog_to_parent(0.4, 0.35)
 
         layout = QtWidgets.QVBoxLayout(self)
 
@@ -1071,9 +1071,25 @@ class ImportDialog(QtWidgets.QDialog):
         info_label.setWordWrap(True)
         layout.addWidget(info_label)
 
+        # File browser button
+        file_btn = QtWidgets.QPushButton("📁 Import from File...")
+        file_btn.setMinimumHeight(40)
+        file_btn.clicked.connect(self._import_authmatrix_from_file)
+        layout.addWidget(file_btn)
+
+        # Optional text input (collapsible)
+        text_group = QtWidgets.QGroupBox("Or paste content here (optional)")
+        text_group.setCheckable(True)
+        text_group.setChecked(False)
+        text_layout = QtWidgets.QVBoxLayout(text_group)
+        
         self.authmatrix_text = QtWidgets.QTextEdit()
         self.authmatrix_text.setPlaceholderText("Paste AuthMatrix JSON content here...")
-        layout.addWidget(self.authmatrix_text)
+        self.authmatrix_text.setMaximumHeight(150)
+        text_layout.addWidget(self.authmatrix_text)
+        
+        layout.addWidget(text_group)
+        layout.addStretch()
 
         return page
 
@@ -1089,11 +1105,27 @@ class ImportDialog(QtWidgets.QDialog):
         info_label.setWordWrap(True)
         layout.addWidget(info_label)
 
+        # File browser button
+        file_btn = QtWidgets.QPushButton("📁 Import from File...")
+        file_btn.setMinimumHeight(40)
+        file_btn.clicked.connect(self._import_single_postman_from_file)
+        layout.addWidget(file_btn)
+
+        # Optional text input (collapsible)
+        text_group = QtWidgets.QGroupBox("Or paste content here (optional)")
+        text_group.setCheckable(True)
+        text_group.setChecked(False)
+        text_layout = QtWidgets.QVBoxLayout(text_group)
+        
         self.single_postman_text = QtWidgets.QTextEdit()
         self.single_postman_text.setPlaceholderText(
             "Paste Postman collection JSON content here..."
         )
-        layout.addWidget(self.single_postman_text)
+        self.single_postman_text.setMaximumHeight(150)
+        text_layout.addWidget(self.single_postman_text)
+        
+        layout.addWidget(text_group)
+        layout.addStretch()
 
         return page
 
@@ -1432,6 +1464,74 @@ class ImportDialog(QtWidgets.QDialog):
         self.imported_collections.clear()
         self._update_collections_display()
 
+    def _import_authmatrix_from_file(self):
+        """Import AuthMatrix from file browser"""
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            "Import AuthMatrix Specification",
+            "",
+            "JSON Files (*.json);;All Files (*)",
+        )
+
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            if self.store.load_spec_from_content(content):
+                self.accept()
+            else:
+                QtWidgets.QMessageBox.critical(
+                    self, "Import Error", "Invalid AuthMatrix format"
+                )
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self, "Import Error", f"Failed to load file:\n{str(e)}"
+            )
+
+    def _import_single_postman_from_file(self):
+        """Import single Postman collection from file browser"""
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            "Import Postman Collection",
+            "",
+            "JSON Files (*.json);;All Files (*)",
+        )
+
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            if self.store.load_spec_from_content(content):
+                # Show configuration dialog for single import
+                if (
+                    self.store._original_postman_data
+                    and not self._has_configured_expectations()
+                ):
+                    dialog = PostmanConfigDialog(self.store, self)
+                    if dialog.exec() == QtWidgets.QDialog.Accepted:
+                        self.accept()
+                    else:
+                        # User cancelled configuration but import was successful
+                        self.accept()
+                else:
+                    self.accept()
+            else:
+                QtWidgets.QMessageBox.critical(
+                    self, "Import Error", "Invalid Postman collection format"
+                )
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self, "Import Error", f"Failed to load file:\n{str(e)}"
+            )
+
     def _handle_import(self):
         """Handle the import based on selected type"""
         if self.authmatrix_radio.isChecked():
@@ -1446,7 +1546,7 @@ class ImportDialog(QtWidgets.QDialog):
         content = self.authmatrix_text.toPlainText().strip()
         if not content:
             QtWidgets.QMessageBox.warning(
-                self, "No Content", "Please paste AuthMatrix content to import."
+                self, "No Content", "Please use 'Import from File' button or paste AuthMatrix content."
             )
             return
 
@@ -1462,7 +1562,7 @@ class ImportDialog(QtWidgets.QDialog):
         content = self.single_postman_text.toPlainText().strip()
         if not content:
             QtWidgets.QMessageBox.warning(
-                self, "No Content", "Please paste Postman collection content to import."
+                self, "No Content", "Please use 'Import from File' button or paste Postman collection content."
             )
             return
 
