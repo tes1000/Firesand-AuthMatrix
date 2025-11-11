@@ -1,6 +1,6 @@
 import os
 from PySide6 import QtCore, QtGui, QtWidgets
-from ..views.Theme import banner, topbar, primary, lines, fg1
+from ..views.Theme import banner
 from ..views.ModernStyles import get_header_stylesheet, apply_animation_properties
 
 
@@ -13,18 +13,24 @@ class LogoHeader(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumHeight(135)
-        self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent, True)
-
-        # Load banner once
-        self._banner = self._load_banner()
-        # Use theme primary color as background
-        self._bg = QtGui.QColor(banner)
+        self.setMinimumHeight(140)
+        self.setMaximumHeight(160)
 
         # Apply modern header stylesheet
         self.setStyleSheet(get_header_stylesheet())
 
+        # Load logo once and scale it to fixed size
+        logo_pixmap = self._load_logo()
+        
         # --- UI ---
+        self.logoLabel = QtWidgets.QLabel()
+        self.logoLabel.setAlignment(QtCore.Qt.AlignCenter)
+        if not logo_pixmap.isNull():
+            # Scale logo to fixed height of 80px
+            scaled_logo = logo_pixmap.scaledToHeight(130, QtCore.Qt.SmoothTransformation)
+            self.logoLabel.setPixmap(scaled_logo)
+            self.logoLabel.setFixedSize(scaled_logo.size())
+
         self.nameEdit = QtWidgets.QLineEdit(placeholderText="Project Name (UI only)")
         self.nameEdit.setMinimumWidth(220)
         apply_animation_properties(self.nameEdit)
@@ -46,6 +52,12 @@ class LogoHeader(QtWidgets.QWidget):
         left.addWidget(self.nameEdit)
         left.addStretch(1)
         
+        # Center logo
+        center = QtWidgets.QHBoxLayout()
+        center.addStretch(1)
+        center.addWidget(self.logoLabel)
+        center.addStretch(1)
+        
         right = QtWidgets.QHBoxLayout()
         right.addStretch(1)
         right.addWidget(self.importBtn)
@@ -53,30 +65,22 @@ class LogoHeader(QtWidgets.QWidget):
         right.addWidget(self.runBtn)
         
         layout = QtWidgets.QHBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.addLayout(left)
-        layout.addLayout(right)
+        layout.setContentsMargins(20, 0, 20, 0) ## Logo margins
+        layout.addLayout(left, 1)
+        layout.addLayout(center, 1)
+        layout.addLayout(right, 1)
 
-    def paintEvent(self, ev: QtGui.QPaintEvent) -> None:
-        # 1) Fill header with theme primary color
-        p = QtGui.QPainter(self)
-        p.fillRect(self.rect(), self._bg)
+    def _load_logo(self) -> QtGui.QPixmap:
+        assets_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "assets",
+        )
 
-        # 2) Draw banner centered, preserving aspect ratio
-        if self._banner and not self._banner.isNull():
-            # Scale to header height only, keep aspect ratio
-            pix = self._banner
-            if pix.height() > 0 and self.height() > 0:
-                pix = self._banner.scaledToHeight(self.height(),
-                                                  QtCore.Qt.SmoothTransformation)
+        for filename in ("firesand_logo.png", "Logo_Ai.png", "banner.jpg"):
+            logo_path = os.path.join(assets_dir, filename)
+            pixmap = QtGui.QPixmap(logo_path)
+            if not pixmap.isNull():
+                return pixmap
 
-            x = (self.width()  - pix.width())  // 2
-            y = (self.height() - pix.height()) // 2
-            p.drawPixmap(x, y, pix)
-
-    def _load_banner(self) -> QtGui.QPixmap:
-        banner_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "banner.jpg")
-        pm = QtGui.QPixmap(banner_path)
-        if pm.isNull():
-            print("Banner not found or failed to load:", banner_path)
-        return pm
+        print("Logo not found in assets directory.")
+        return QtGui.QPixmap()

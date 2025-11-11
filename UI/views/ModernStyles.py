@@ -37,7 +37,7 @@ def get_main_stylesheet() -> str:
     QPushButton {{
         background-color: {btn_default_bg};
         color: {fg1};
-        border: 1px solid {lines};
+        border: 0.5px solid transparent;
         padding: 8px 16px;
         border-radius: 6px;
         font-weight: 500;
@@ -46,7 +46,7 @@ def get_main_stylesheet() -> str:
     
     QPushButton:hover {{
         background-color: {hover_bg};
-        border: 1px solid {alt_fg2};
+        border: 0.5px solid transparent;
     }}
     
     QPushButton:pressed {{
@@ -58,18 +58,18 @@ def get_main_stylesheet() -> str:
     QPushButton:disabled {{
         background-color: {bg2};
         color: {disabled};
-        border: 1px solid {lines};
+        border: 0.5px solid transparent;
     }}
     
     QPushButton:default {{
         background-color: {primary};
-        border: 1px solid {primary_dark};
+        border: 0.5px solid transparent;
         font-weight: 600;
     }}
     
     QPushButton:default:hover {{
         background-color: {primary_light};
-        border: 1px solid {primary};
+        border: 0.5px solid transparent;
     }}
     
     QPushButton:default:pressed {{
@@ -79,7 +79,7 @@ def get_main_stylesheet() -> str:
     /* Primary Action Buttons */
     QPushButton[class="primary"] {{
         background-color: {primary};
-        border: 1px solid {primary_dark};
+        border: 0.5px solid transparent;
         color: {fg1};
         font-weight: 600;
     }}
@@ -91,7 +91,7 @@ def get_main_stylesheet() -> str:
     /* Secondary Action Buttons */
     QPushButton[class="secondary"] {{
         background-color: {secondary};
-        border: 1px solid {secondary_dark};
+        border: 0.5px solid transparent;
         color: {topbar};
         font-weight: 600;
     }}
@@ -104,21 +104,21 @@ def get_main_stylesheet() -> str:
     /* Success Buttons */
     QPushButton[class="success"] {{
         background-color: {success};
-        border: 1px solid {success};
+        border: 0.5px solid transparent;
         color: {fg1};
     }}
     
     /* Warning Buttons */
     QPushButton[class="warning"] {{
         background-color: {warning};
-        border: 1px solid {warning};
+        border: 0.5px solid transparent;
         color: {fg1};
     }}
     
     /* Danger Buttons */
     QPushButton[class="danger"] {{
         background-color: {danger};
-        border: 1px solid {danger};
+        border: 0.5px solid transparent;
         color: {fg1};
     }}
     
@@ -126,7 +126,7 @@ def get_main_stylesheet() -> str:
     QLineEdit {{
         background-color: {alt_bg1};
         color: {fg1};
-        border: 2px solid {lines};
+        border: 0.5px solid {lines};
         border-radius: 6px;
         padding: 8px 12px;
         selection-background-color: {primary};
@@ -134,18 +134,18 @@ def get_main_stylesheet() -> str:
     }}
     
     QLineEdit:focus {{
-        border: 2px solid {primary};
+        border: 0.5px solid {primary};
         background-color: {bg2};
     }}
     
     QLineEdit:hover {{
-        border: 2px solid {hover_bg};
+        border: 0.5px solid {hover_bg};
     }}
     
     QLineEdit:disabled {{
         background-color: {bg2};
         color: {disabled};
-        border: 2px solid {lines};
+        border: 0.5px solid {lines};
     }}
     
     QLineEdit[placeholderText] {{
@@ -156,14 +156,14 @@ def get_main_stylesheet() -> str:
     QTextEdit, QPlainTextEdit {{
         background-color: {alt_bg1};
         color: {fg1};
-        border: 2px solid {lines};
+        border: 0.5px solid {lines};
         border-radius: 6px;
         padding: 8px;
         selection-background-color: {primary};
     }}
     
     QTextEdit:focus, QPlainTextEdit:focus {{
-        border: 2px solid {primary};
+        border: 0.5px solid {primary};
         background-color: {bg2};
     }}
     
@@ -171,19 +171,19 @@ def get_main_stylesheet() -> str:
     QComboBox {{
         background-color: {alt_bg1};
         color: {fg1};
-        border: 2px solid {lines};
+        border: 0.5px solid {lines};
         border-radius: 6px;
         padding: 8px 12px;
         min-height: 24px;
     }}
     
     QComboBox:hover {{
-        border: 2px solid {hover_bg};
+        border: 0.5px solid {hover_bg};
         background-color: {hover_bg};
     }}
     
     QComboBox:focus {{
-        border: 2px solid {primary};
+        border: 0.5px solid {primary};
     }}
     
     QComboBox::drop-down {{
@@ -202,7 +202,7 @@ def get_main_stylesheet() -> str:
     QComboBox QAbstractItemView {{
         background-color: {alt_bg1};
         color: {fg1};
-        border: 2px solid {lines};
+        border: 0.5px solid {lines};
         selection-background-color: {primary};
         selection-color: {fg1};
         outline: none;
@@ -255,7 +255,7 @@ def get_main_stylesheet() -> str:
         background-color: {primary};
         color: {fg1};
         font-weight: 600;
-        border-bottom: 2px solid {primary};
+        border-bottom: 0.5px solid {primary};
     }}
     
     QTabBar::tab:!selected {{
@@ -294,7 +294,7 @@ def get_main_stylesheet() -> str:
         padding: 10px;
         border: none;
         border-right: 1px solid {lines};
-        border-bottom: 2px solid {primary};
+        border-bottom: 0.5px solid {primary};
         font-weight: 600;
     }}
     
@@ -374,7 +374,7 @@ def get_main_stylesheet() -> str:
     
     /* GroupBox */
     QGroupBox {{
-        border: 2px solid {lines};
+        border: 0.5px solid {lines};
         border-radius: 6px;
         margin-top: 12px;
         padding-top: 12px;
@@ -394,8 +394,11 @@ def get_main_stylesheet() -> str:
     QToolBar {{
         background-color: {topbar};
         border: none;
+        border-bottom: none;
+        border-top: none;
         padding: 4px;
         spacing: 8px;
+        margin: 0px;
     }}
     
     QToolBar::separator {{
@@ -465,17 +468,17 @@ def get_main_stylesheet() -> str:
         width: 16px;
         height: 16px;
         border-radius: 8px;
-        border: 2px solid {lines};
+        border: 0.5px solid {lines};
         background-color: {bg2};
     }}
     
     QRadioButton::indicator:hover {{
-        border: 2px solid {primary};
+        border: 0.5px solid {primary};
     }}
     
     QRadioButton::indicator:checked {{
         background-color: {primary};
-        border: 2px solid {primary};
+        border: 0.5px solid {primary};
     }}
     
     /* CheckBox */
@@ -488,17 +491,17 @@ def get_main_stylesheet() -> str:
         width: 16px;
         height: 16px;
         border-radius: 4px;
-        border: 2px solid {lines};
+        border: 0.5px solid {lines};
         background-color: {bg2};
     }}
     
     QCheckBox::indicator:hover {{
-        border: 2px solid {primary};
+        border: 0.5px solid {primary};
     }}
     
     QCheckBox::indicator:checked {{
         background-color: {primary};
-        border: 2px solid {primary};
+        border: 0.5px solid {primary};
         image: url(none);
     }}
     
@@ -506,14 +509,14 @@ def get_main_stylesheet() -> str:
     QSpinBox, QDoubleSpinBox {{
         background-color: {alt_bg1};
         color: {fg1};
-        border: 2px solid {lines};
+        border: 0.5px solid {lines};
         border-radius: 6px;
         padding: 6px;
         min-height: 24px;
     }}
     
     QSpinBox:focus, QDoubleSpinBox:focus {{
-        border: 2px solid {primary};
+        border: 0.5px solid {primary};
     }}
     
     QSpinBox::up-button, QDoubleSpinBox::up-button {{
@@ -544,12 +547,12 @@ def get_header_stylesheet() -> str:
     """Get stylesheet for the header/toolbar section."""
     return f"""
         QWidget {{
-            background-color: {topbar};
+            background-color: {bg2};
         }}
         
         QLineEdit {{
             background-color: rgba(255, 255, 255, 0.9);
-            border: 2px solid {lines};
+            border: 0.5px solid transparent;
             border-radius: 6px;
             padding: 8px 12px;
             color: #333;
@@ -557,13 +560,13 @@ def get_header_stylesheet() -> str:
         }}
         
         QLineEdit:focus {{
-            border: 2px solid {primary};
+            border: 0.5px solid {primary};
             background-color: rgba(255, 255, 255, 1.0);
         }}
         
         QPushButton {{
             background-color: rgba(255, 255, 255, 0.9);
-            border: 2px solid {lines};
+            border: 0.5px solid {lines};
             border-radius: 6px;
             padding: 10px 20px;
             color: #333;
@@ -573,7 +576,7 @@ def get_header_stylesheet() -> str:
         
         QPushButton:hover {{
             background-color: rgba(255, 255, 255, 1.0);
-            border: 2px solid {primary};
+            border: 0.5px solid {primary};
         }}
         
         QPushButton:pressed {{

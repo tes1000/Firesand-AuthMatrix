@@ -7,7 +7,7 @@ import requests
 from PySide6 import QtCore, QtGui, QtWidgets
 from .views.SpecStore import SpecStore
 from .views.Results import ResultsSection
-from .views.Theme import primary, secondary, background, text, border
+from .views.Theme import primary, secondary, background, text, border, lines, bg2
 from .views.ModernStyles import get_main_stylesheet, apply_animation_properties
 from .views.ModernStyles import get_main_stylesheet, apply_animation_properties
 from .components import LogoHeader, multiline_input, show_text, TabsComponent
@@ -66,6 +66,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addToolBarBreak()
         tool = QtWidgets.QToolBar()
         tool.setMovable(False)
+        tool.setStyleSheet(
+            f"QToolBar {{ background-color: {bg2}; border: none; border-bottom: 0.5px solid {lines}; margin: 0px; padding: 0px; }}"
+        )
         tool.addWidget(self.header)
         self.addToolBar(QtCore.Qt.TopToolBarArea, tool)
 
