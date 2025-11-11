@@ -18,7 +18,7 @@ A comprehensive tool for testing API authorization matrices across different use
 Install the latest release from GitHub Packages:
 
 ```bash
-pip install firesands-auth-matrix --index-url https://upload.pypi.org/legacy/
+pip install firesands-auth-matrix --index-url https://pypi.pkg.github.com/tes1000/
 ```
 
 ### From Source
