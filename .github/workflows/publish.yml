@@ -1,4 +1,4 @@
-name: Publish to GitHub Packages
+name: Verify Release Assets
 
 on:
   release:
@@ -7,62 +7,42 @@ on:
 
 permissions:
   contents: read
-  packages: write
-  id-token: write
 
 jobs:
-  publish-to-github-packages:
-    name: Publish Python Package to GitHub Packages
+  verify-release-assets:
+    name: Verify Release Assets
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install build dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build twine setuptools wheel
-
-    - name: Build distribution packages
-      run: python -m build
-
-    - name: Publish package to GitHub Packages
+    - name: Verify release assets
       env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-        TWINE_REPOSITORY_URL: https://upload.pypi.org/legacy/
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: bash
       run: |
-        echo "Publishing to GitHub Packages..."
-        python -m twine upload \
-          --repository-url https://upload.pypi.org/legacy/ \
-          --verbose \
-          dist/*
+        TAG_NAME="${{ github.event.release.tag_name }}"
+        echo "📦 Verifying release assets for $TAG_NAME..."
+        gh release view "$TAG_NAME" --repo ${{ github.repository }}
 
-    - name: Create package summary
+    - name: Create release summary
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: bash
       run: |
-        echo "## 📦 Package Published" >> $GITHUB_STEP_SUMMARY
+        TAG_NAME="${{ github.event.release.tag_name }}"
+        echo "## 📦 Release Published" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "The package has been published to GitHub Packages." >> $GITHUB_STEP_SUMMARY
+        echo "Release **$TAG_NAME** has been published with executables." >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Installation" >> $GITHUB_STEP_SUMMARY
+        echo "### Available Downloads" >> $GITHUB_STEP_SUMMARY
         echo '```bash' >> $GITHUB_STEP_SUMMARY
-        echo "pip install firesands-auth-matrix" >> $GITHUB_STEP_SUMMARY
+        echo "# Windows" >> $GITHUB_STEP_SUMMARY
+        echo "gh release download $TAG_NAME --pattern 'AuthMatrix-windows.exe'" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "# Linux" >> $GITHUB_STEP_SUMMARY
+        echo "gh release download $TAG_NAME --pattern 'AuthMatrix-linux'" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Package Details" >> $GITHUB_STEP_SUMMARY
-        echo "- **Repository**: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Release**: ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
-        ls -lh dist/ >> $GITHUB_STEP_SUMMARY
-
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: python-package-distributions
-        path: dist/
-        retention-days: 30
+        echo "### Release Assets" >> $GITHUB_STEP_SUMMARY
+        gh release view "$TAG_NAME" --json assets --jq '.assets[] | "- \(.name) (\(.size) bytes)"' >> $GITHUB_STEP_SUMMARY
