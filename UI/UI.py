@@ -10,7 +10,7 @@ from .views.Results import ResultsSection
 from .views.Theme import primary, secondary, background, text, border, lines, bg2
 from .views.ModernStyles import get_main_stylesheet, apply_animation_properties
 from .views.ModernStyles import get_main_stylesheet, apply_animation_properties
-from .components import LogoHeader, multiline_input, show_text, TabsComponent
+from .components import LogoHeader, multiline_input, show_text, TabsComponent, ProgressDialog
 
 
 def worker_process_function(runner_func, spec, result_queue, error_queue):
@@ -54,6 +54,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.result_queue: Optional[multiprocessing.Queue] = None
         self.error_queue: Optional[multiprocessing.Queue] = None
         self.poll_timer: Optional[QtCore.QTimer] = None
+        
+        # Progress dialog
+        self.progress_dialog: Optional[ProgressDialog] = None
 
         # Apply modern stylesheet
         self.setStyleSheet(get_main_stylesheet())
@@ -298,7 +301,16 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         url = self.store.spec["base_url"].rstrip("/")
         self.statusBar().showMessage("Running… test on: " + url)
-        self.setEnabled(False)
+        
+        # Create and show progress dialog
+        if not self.progress_dialog:
+            self.progress_dialog = ProgressDialog(self)
+            self.progress_dialog.cancelRequested.connect(self._cancel_run)
+        
+        self.progress_dialog.reset()
+        self.progress_dialog.set_message("Sending requests...")
+        self.progress_dialog.set_detail(f"Testing endpoints on: {url}")
+        self.progress_dialog.start()
 
         # Create multiprocessing queues for communication
         self.result_queue = multiprocessing.Queue()
@@ -325,6 +337,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.process.is_alive():
             self.poll_timer.stop()
 
+            # Hide progress dialog
+            if self.progress_dialog:
+                self.progress_dialog.stop()
+
             # Check for errors first
             if not self.error_queue.empty():
                 error_msg = self.error_queue.get()
@@ -347,14 +363,46 @@ class MainWindow(QtWidgets.QMainWindow):
     def _on_finished(self, results: dict):
         self.results = results
         self.resultsView.render(results)
-        self.setEnabled(True)
         print("DEBUG: Run finished with results:")
         self.statusBar().showMessage("Done", 3000)
 
     def _on_failed(self, msg: str):
         QtWidgets.QMessageBox.critical(self, "Run Failed", msg)
-        self.setEnabled(True)
         self.statusBar().clearMessage()
+    
+    def _cancel_run(self):
+        """Handle cancellation request from progress dialog."""
+        if self.process and self.process.is_alive():
+            # Update dialog message
+            if self.progress_dialog:
+                self.progress_dialog.set_message("Cancelling...")
+                self.progress_dialog.set_detail("Stopping test execution")
+            
+            # Terminate the process
+            self.process.terminate()
+            self.process.join(timeout=1.0)  # Wait up to 1 second
+            
+            if self.process.is_alive():
+                # Force kill if still alive
+                self.process.kill()
+                self.process.join()
+            
+            # Stop polling
+            if self.poll_timer:
+                self.poll_timer.stop()
+                self.poll_timer = None
+            
+            # Hide progress dialog
+            if self.progress_dialog:
+                self.progress_dialog.stop()
+            
+            # Clean up
+            self.process = None
+            self.result_queue = None
+            self.error_queue = None
+            
+            # Update status bar
+            self.statusBar().showMessage("Test run cancelled", 3000)
 
     def closeEvent(self, event):
         """Clean up multiprocessing resources when window is closed."""
@@ -366,6 +414,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if self.poll_timer:
             self.poll_timer.stop()
+        
+        if self.progress_dialog:
+            self.progress_dialog.stop()
 
         super().closeEvent(event)
 
