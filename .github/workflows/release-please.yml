@@ -2,7 +2,7 @@ name: Release Please
 
 on:
   push:
-    branches: [release]
+    branches: [release]  
 
 permissions:
   contents: write
@@ -47,7 +47,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pyinstaller
+        pip install pyinstaller pillow
+
+    - name: Convert icon
+      run: |
+        python convert_icon.py
 
     - name: Build executable
       run: |
