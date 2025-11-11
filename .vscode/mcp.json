@@ -16,11 +16,6 @@
                 "gateway",
                 "run"
             ],
-            "env": {
-                "LOCALAPPDATA": "C:\\Users\\DanielKiska\\AppData\\Local",
-                "ProgramData": "C:\\ProgramData",
-                "ProgramFiles": "C:\\Program Files"
-            },
             "type": "stdio"
         }
     }

@@ -41,7 +41,7 @@ To make your package visible on your GitHub profile:
 Users can install your package from GitHub Packages:
 
 ```bash
-pip install firesands-auth-matrix --index-url https://upload.pypi.org/legacy/
+pip install firesands-auth-matrix --index-url https://pypi.pkg.github.com/tes1000/
 ```
 
 ### Alternative: Configure pip permanently
@@ -50,7 +50,7 @@ Create or edit `~/.pip/pip.conf` (Linux/macOS) or `%APPDATA%\pip\pip.ini` (Windo
 
 ```ini
 [global]
-extra-index-url = https://upload.pypi.org/legacy/
+extra-index-url = https://pypi.pkg.github.com/tes1000/
 ```
 
 Then install normally:
@@ -68,7 +68,7 @@ firesands-auth-matrix
 And install with the index URL:
 
 ```bash
-pip install -r requirements.txt --index-url https://upload.pypi.org/legacy/
+pip install -r requirements.txt --index-url https://pypi.pkg.github.com/tes1000/
 ```
 
 ## Development Notes

@@ -58,6 +58,10 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false
 
+    - name: Install xml2js for test result parsing
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12' && always()
+      run: npm install xml2js
+
     - name: Comment PR with test results
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12' && always()
       uses: actions/github-script@v7
