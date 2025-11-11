@@ -84,9 +84,9 @@ class TokensSection(QtWidgets.QWidget):
             actionsLayout.setContentsMargins(0, 0, 0, 0)
             
             deleteBtn = QtWidgets.QPushButton("Delete")
-            deleteBtn.setMinimumHeight(30)
+            deleteBtn.setMinimumHeight(32)
             deleteBtn.setMinimumWidth(60)
-            deleteBtn.setStyleSheet("QPushButton { background-color: #d32f2f; color: white; font-size: 10px; padding: 0px; margin: 0px; }")
+            deleteBtn.setStyleSheet("QPushButton { background-color: #d32f2f; color: white; padding: 6px 12px; }")
             deleteBtn.clicked.connect(lambda _=None, role=rid: self._remove_role(role))
             
             actionsLayout.addStretch()

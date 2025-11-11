@@ -149,14 +149,14 @@ class EndpointsSection(QtWidgets.QWidget):
             actionsLayout.setContentsMargins(2, 2, 2, 2)
             
             editBtn = QtWidgets.QPushButton("Edit")
-            editBtn.setMaximumHeight(24)
+            editBtn.setMinimumHeight(32)
             editBtn.setMinimumWidth(50)
-            editBtn.setStyleSheet("QPushButton { padding: 1px 10px; }")
+            editBtn.setStyleSheet("QPushButton { padding: 6px 12px; }")
             editBtn.clicked.connect(lambda _=None, row=i: self._edit_endpoint_row(row))
             deleteBtn = QtWidgets.QPushButton("Delete")
-            deleteBtn.setMaximumHeight(24)
+            deleteBtn.setMinimumHeight(32)
             deleteBtn.setMinimumWidth(60)
-            deleteBtn.setStyleSheet("QPushButton { padding: 1px 10px; background-color: #d32f2f; color: white; }")
+            deleteBtn.setStyleSheet("QPushButton { padding: 6px 12px; background-color: #d32f2f; color: white; }")
             deleteBtn.clicked.connect(lambda _=None, row=i: self._delete_endpoint(row))
             
             actionsLayout.addWidget(editBtn)
@@ -415,9 +415,9 @@ class EndpointsSection(QtWidgets.QWidget):
             
             # Buttons
             editBtn = QtWidgets.QPushButton("Edit")
-            editBtn.setStyleSheet("QPushButton { background-color: #007bff; color: white; border: none; padding: 4px 12px; border-radius: 3px; margin-left: 8px; }")
+            editBtn.setStyleSheet("QPushButton { background-color: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 3px; margin-left: 8px; }")
             deleteBtn = QtWidgets.QPushButton("Delete")
-            deleteBtn.setStyleSheet("QPushButton { background-color: #dc3545; color: white; border: none; padding: 4px 12px; border-radius: 3px; margin-left: 4px; }")
+            deleteBtn.setStyleSheet("QPushButton { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 3px; margin-left: 4px; }")
             
             editBtn.clicked.connect(lambda: edit_behavior(index))
             deleteBtn.clicked.connect(lambda: delete_behavior(index))
