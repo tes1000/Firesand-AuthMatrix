@@ -28,6 +28,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Auth Matrix")
         self.resize(920, 624)
         
+        # Set window icon
+        self._set_window_icon()
+        
         # Center the window on the screen
         self._center_window()
 
@@ -111,6 +114,25 @@ class MainWindow(QtWidgets.QMainWindow):
             
             # Move window to calculated position
             self.move(window_geometry.topLeft())
+
+    def _set_window_icon(self):
+        """Set the window icon from assets folder"""
+        import os
+        from pathlib import Path
+        
+        # Try to find the icon file
+        # When running from source
+        icon_path = Path(__file__).parent / "assets" / "favicon.png"
+        
+        # When running from PyInstaller bundle
+        if not icon_path.exists() and hasattr(sys, '_MEIPASS'):
+            icon_path = Path(sys._MEIPASS) / "UI" / "assets" / "favicon.png"
+        
+        if icon_path.exists():
+            icon = QtGui.QIcon(str(icon_path))
+            self.setWindowIcon(icon)
+            # Also set the application icon for taskbar
+            QtWidgets.QApplication.instance().setWindowIcon(icon)
 
     def _on_spec_changed(self):
         """Update UI elements when the spec changes"""
