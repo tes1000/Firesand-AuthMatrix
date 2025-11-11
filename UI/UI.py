@@ -34,11 +34,6 @@ class MainWindow(QtWidgets.QMainWindow):
         
         # Enable layout animations for smooth resizing
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground, False)
-        self.setMinimumSize(800, 600)  # Set minimum size for responsiveness
-        self.resize(1024, 768)  # Better default size for modern displays
-        
-        # Enable layout animations for smooth resizing
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground, False)
         
         # Center the window on the screen
         self._center_window()
