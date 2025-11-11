@@ -8,6 +8,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from .views.SpecStore import SpecStore
 from .views.Results import ResultsSection
 from .views.Theme import primary, secondary, background, text, border
+from .views.ModernStyles import get_main_stylesheet, apply_animation_properties
 from .components import LogoHeader, multiline_input, show_text, TabsComponent
 
 
@@ -27,7 +28,12 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, runner: Optional[Callable[[dict], dict]] = None):
         super().__init__()
         self.setWindowTitle("Auth Matrix")
-        self.resize(920, 624)
+        self.setMinimumSize(800, 600)  # Set minimum size for responsiveness
+        self.resize(1024, 768)  # Better default size for modern displays
+        
+        # Enable layout animations for smooth resizing
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground, False)
+        
         # Center the window on the screen
         self._center_window()
 
@@ -41,6 +47,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.error_queue: Optional[multiprocessing.Queue] = None
         self.poll_timer: Optional[QtCore.QTimer] = None
 
+        # Apply modern stylesheet
+        self.setStyleSheet(get_main_stylesheet())
+
         # Header
         self.header = LogoHeader()
         self.addToolBarBreak()
@@ -51,23 +60,29 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Theme: use static colors from Theme.py
         self.themeColor = QtGui.QColor(primary)
-        self._apply_theme(self.themeColor)
 
         # Content as tabs
         central = QtWidgets.QWidget()
         self.setCentralWidget(central)
         vlayout = QtWidgets.QVBoxLayout(central)
+        vlayout.setContentsMargins(16, 16, 16, 16)  # Modern spacing
+        vlayout.setSpacing(12)  # Consistent spacing
 
-        # Base URL at the top
+        # Base URL section with better styling
+        url_label = QtWidgets.QLabel("<b>Base URL</b>")
+        url_label.setProperty("class", "title")
+        vlayout.addWidget(url_label)
+        
         self.baseUrlEdit = QtWidgets.QLineEdit()
         self.baseUrlEdit.setPlaceholderText("http://localhost:3000")
         self.baseUrlEdit.textChanged.connect(self.store.set_base_url)
-        vlayout.addWidget(QtWidgets.QLabel("<b>Base URL</b>"))
+        apply_animation_properties(self.baseUrlEdit)
         vlayout.addWidget(self.baseUrlEdit)
 
         # Tabs for Headers, Endpoints, Tokens
         self.tabs = TabsComponent(self.store)
-        vlayout.addWidget(self.tabs)
+        apply_animation_properties(self.tabs)
+        vlayout.addWidget(self.tabs, 1)  # Give tabs more space
 
         # Convenience properties to access sections
         self.headers = self.tabs.get_headers()
@@ -75,9 +90,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tokens = self.tabs.get_tokens()
 
         # Results section below tabs
-        vlayout.addWidget(QtWidgets.QLabel("<b>Results</b>"))
+        results_label = QtWidgets.QLabel("<b>Results</b>")
+        results_label.setProperty("class", "title")
+        vlayout.addWidget(results_label)
+        
         self.resultsView = ResultsSection()
-        vlayout.addWidget(self.resultsView)
+        apply_animation_properties(self.resultsView)
+        vlayout.addWidget(self.resultsView, 1)  # Give results more space
 
         # wire header actions
         self.header.importRequested.connect(self._import_spec)
@@ -90,11 +109,36 @@ class MainWindow(QtWidgets.QMainWindow):
         # Initialize UI with current spec values
         self._on_spec_changed()
 
-        # statusbar
-        self.statusBar().showMessage("Ready")
+        # statusbar with better styling
+        status_bar = self.statusBar()
+        status_bar.showMessage("Ready")
+        status_bar.setSizeGripEnabled(True)  # Enable resize grip
 
-        # Optional: preload example data (comment out if not wanted)
-        # self._load_example()
+        # Install event filter for responsive behavior
+        self.installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        """Event filter for handling responsive UI behavior."""
+        if obj == self and event.type() == QtCore.QEvent.Resize:
+            # Handle responsive layout adjustments on resize
+            self._handle_responsive_layout()
+        return super().eventFilter(obj, event)
+    
+    def _handle_responsive_layout(self):
+        """Adjust layout based on window size for responsiveness."""
+        width = self.width()
+        height = self.height()
+        
+        # Adjust font sizes for very small screens
+        if width < 900:
+            # Compact mode for smaller screens
+            font_size = "12px"
+        else:
+            # Normal mode
+            font_size = "13px"
+        
+        # Note: Full responsive styling is handled by the stylesheet
+        # This method can be extended for dynamic layout changes
 
     def _center_window(self):
         """Center the window on the primary screen"""

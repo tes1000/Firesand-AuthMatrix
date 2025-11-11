@@ -1,6 +1,7 @@
 import os
 from PySide6 import QtCore, QtGui, QtWidgets
-from ..views.Theme import banner, background
+from ..views.Theme import banner, topbar, primary, lines, fg1
+from ..views.ModernStyles import get_header_stylesheet, apply_animation_properties
 
 
 class LogoHeader(QtWidgets.QWidget):
@@ -20,36 +21,22 @@ class LogoHeader(QtWidgets.QWidget):
         # Use theme primary color as background
         self._bg = QtGui.QColor(banner)
 
+        # Apply modern header stylesheet
+        self.setStyleSheet(get_header_stylesheet())
+
         # --- UI ---
         self.nameEdit = QtWidgets.QLineEdit(placeholderText="Project Name (UI only)")
         self.nameEdit.setMinimumWidth(220)
-        self.nameEdit.setStyleSheet(f"""
-            QLineEdit {{
-                background-color: rgba(255,255,255,0.9);
-                border: 2px solid {background};
-                border-radius: 5px;
-                padding: 5px;
-                color: #333;
-            }}""")
+        apply_animation_properties(self.nameEdit)
 
         self.importBtn = QtWidgets.QPushButton("Import")
         self.exportBtn = QtWidgets.QPushButton("Export")
         self.runBtn = QtWidgets.QPushButton("Run")
         self.runBtn.setDefault(True)
         
-        btn_css = f"""
-            QPushButton {{
-                background-color: rgba(255,255,255,0.9);
-                border: 2px solid {background};
-                border-radius: 5px;
-                padding: 8px 15px;
-                color: #333;
-                font-weight: bold;
-            }}
-            QPushButton:hover {{ background-color: rgba(255,255,255,1.0); }}
-        """
-        for b in (self.importBtn, self.exportBtn, self.runBtn): 
-            b.setStyleSheet(btn_css)
+        # Apply animation properties to buttons
+        for btn in (self.importBtn, self.exportBtn, self.runBtn):
+            apply_animation_properties(btn)
         
         self.importBtn.clicked.connect(self.importRequested.emit)
         self.exportBtn.clicked.connect(self.exportRequested.emit)
