@@ -67,3 +67,42 @@ class ResultsSection(QtWidgets.QWidget):
                 cell = QtWidgets.QTableWidgetItem(text)
                 cell.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.table.setItem(r, c, cell)
+    
+    def update_result(self, endpoint_name: str, role: str, result: Dict[str, Any]):
+        """Update a single result in the table (for streaming results)"""
+        # Find the row for this endpoint
+        row = -1
+        for r in range(self.table.rowCount()):
+            item = self.table.item(r, 0)
+            if item and item.text() == endpoint_name:
+                row = r
+                break
+        
+        if row == -1:
+            # Endpoint not found, this shouldn't happen
+            return
+        
+        # Find the column for this role
+        col = -1
+        for c in range(1, self.table.columnCount()):
+            header = self.table.horizontalHeaderItem(c)
+            if header and header.text() == role:
+                col = c
+                break
+        
+        if col == -1:
+            # Role not found, this shouldn't happen
+            return
+        
+        # Update the cell
+        st = result.get("status", "")
+        http = result.get("http", "")
+        badge = "✅" if st == "PASS" else ("⏭️" if st == "SKIP" else "❌")
+        text = f"{badge} {http}" if http else badge
+        lat = result.get("latency_ms")
+        if isinstance(lat, int):
+            text += f"  {lat}ms"
+        
+        cell = QtWidgets.QTableWidgetItem(text)
+        cell.setTextAlignment(QtCore.Qt.AlignCenter)
+        self.table.setItem(row, col, cell)

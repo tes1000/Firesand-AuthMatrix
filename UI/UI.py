@@ -10,7 +10,63 @@ from .views.Results import ResultsSection
 from .views.Theme import primary, secondary, background, text, border, lines, bg2
 from .views.ModernStyles import get_main_stylesheet, apply_animation_properties
 from .views.ModernStyles import get_main_stylesheet, apply_animation_properties
-from .components import LogoHeader, multiline_input, show_text, TabsComponent, ProgressDialog
+from .components import LogoHeader, multiline_input, show_text, TabsComponent
+
+
+def streaming_worker_function(spec, result_queue, error_queue, stop_event):
+    """Worker function that streams results as they complete."""
+    try:
+        for ep in spec["endpoints"]:
+            # Check if we should stop
+            if stop_event.is_set():
+                result_queue.put(("STOPPED", None, None, None))
+                return
+            
+            name = ep.get("name") or ep["path"]
+            
+            for role, roleSpec in spec["roles"].items():
+                # Check if we should stop
+                if stop_event.is_set():
+                    result_queue.put(("STOPPED", None, None, None))
+                    return
+                
+                expect = ep.get("expect", {}).get(role)
+                if not expect:
+                    result_queue.put(("RESULT", name, role, {"status": "SKIP"}))
+                    continue
+
+                # Build request
+                url = spec["base_url"].rstrip("/") + ep["path"]
+                headers = dict(spec.get("default_headers", {}))
+                auth = roleSpec.get("auth", {})
+                if auth.get("type") == "bearer":
+                    headers["Authorization"] = f"Bearer {auth.get('token')}"
+
+                # Run request
+                start = time.time()
+                try:
+                    r = requests.request(ep.get("method", "GET"), url, headers=headers, timeout=30)
+                    latency = int((time.time() - start) * 1000)
+                except Exception as e:
+                    result_queue.put(("RESULT", name, role, {"status": "FAIL", "error": str(e)}))
+                    continue
+
+                # Check
+                allowed = expect.get("status")
+                if isinstance(allowed, list):
+                    ok = r.status_code in allowed
+                else:
+                    ok = r.status_code == allowed
+
+                if not ok:
+                    result_queue.put(("RESULT", name, role, {"status": "FAIL", "http": r.status_code}))
+                else:
+                    result_queue.put(("RESULT", name, role, {"status": "PASS", "http": r.status_code, "latency_ms": latency}))
+        
+        # Signal completion
+        result_queue.put(("DONE", None, None, None))
+    except Exception as e:
+        error_queue.put(str(e))
 
 
 def worker_process_function(runner_func, spec, result_queue, error_queue):
@@ -49,14 +105,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.store = SpecStore()
         self.results: Optional[Dict[str, Dict[str, Dict[str, Any]]]] = None
 
-        # Multiprocessing attributes
+        # Multiprocessing attributes for streaming
         self.process: Optional[multiprocessing.Process] = None
         self.result_queue: Optional[multiprocessing.Queue] = None
         self.error_queue: Optional[multiprocessing.Queue] = None
+        self.stop_event: Optional[multiprocessing.Event] = None
         self.poll_timer: Optional[QtCore.QTimer] = None
         
-        # Progress dialog
-        self.progress_dialog: Optional[ProgressDialog] = None
+        # Track streaming results
+        self.streaming_results: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
         # Apply modern stylesheet
         self.setStyleSheet(get_main_stylesheet())
@@ -127,6 +184,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.header.importRequested.connect(self._import_spec)
         self.header.exportRequested.connect(self._export_spec)
         self.header.runRequested.connect(self._run)
+        self.header.stopRequested.connect(self._stop_run)
 
         # Connect to spec changes to update UI
         self.store.specChanged.connect(self._on_spec_changed)
@@ -296,128 +354,155 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # Run
     def _run(self):
+        """Start running tests with streaming results"""
         if not self.store.spec.get("base_url"):
             QtWidgets.QMessageBox.warning(self, "Run", "Base URL is required")
             return
+        
         url = self.store.spec["base_url"].rstrip("/")
-        self.statusBar().showMessage("Running… test on: " + url)
+        self.statusBar().showMessage("Running tests on: " + url)
         
-        # Create and show progress dialog
-        if not self.progress_dialog:
-            self.progress_dialog = ProgressDialog(self)
-            self.progress_dialog.cancelRequested.connect(self._cancel_run)
+        # Set button to running state
+        self.header.set_running_state(True)
         
-        self.progress_dialog.reset()
-        self.progress_dialog.set_message("Sending requests...")
-        self.progress_dialog.set_detail(f"Testing endpoints on: {url}")
-        self.progress_dialog.start()
-
-        # Create multiprocessing queues for communication
+        # Initialize streaming results with empty structure
+        self.streaming_results = {}
+        for ep in self.store.spec.get("endpoints", []):
+            name = ep.get("name") or ep["path"]
+            self.streaming_results[name] = {}
+            for role in self.store.spec.get("roles", {}).keys():
+                self.streaming_results[name][role] = {"status": "⏳"}  # Pending
+        
+        # Initialize results table with empty/pending state
+        self.resultsView.render(self.streaming_results)
+        
+        # Switch to Results tab
+        self.tabs.setCurrentIndex(3)  # Results tab is typically index 3
+        
+        # Create multiprocessing resources
         self.result_queue = multiprocessing.Queue()
         self.error_queue = multiprocessing.Queue()
-
+        self.stop_event = multiprocessing.Event()
+        
         # Create and start worker process
         self.process = multiprocessing.Process(
-            target=worker_process_function,
-            args=(self.runner, self.store.spec, self.result_queue, self.error_queue),
+            target=streaming_worker_function,
+            args=(self.store.spec, self.result_queue, self.error_queue, self.stop_event),
         )
         self.process.start()
-
-        # Set up timer to poll for results
+        
+        # Set up timer to poll for streaming results
         self.poll_timer = QtCore.QTimer()
-        self.poll_timer.timeout.connect(self._poll_process)
+        self.poll_timer.timeout.connect(self._poll_streaming_results)
         self.poll_timer.start(100)  # Poll every 100ms
-
-    def _poll_process(self):
-        """Poll the worker process for completion."""
+    
+    def _stop_run(self):
+        """Stop the currently running tests"""
+        if self.stop_event:
+            self.stop_event.set()
+        self.statusBar().showMessage("Stopping tests...", 2000)
+    
+    def _poll_streaming_results(self):
+        """Poll for streaming results from the worker process"""
         if not self.process:
             return
-
-        # Check if process has finished
+        
+        # Process all available results in the queue
+        while not self.result_queue.empty():
+            try:
+                msg_type, endpoint_name, role, result = self.result_queue.get_nowait()
+                
+                if msg_type == "RESULT":
+                    # Update the specific result
+                    if endpoint_name in self.streaming_results:
+                        self.streaming_results[endpoint_name][role] = result
+                        self.resultsView.update_result(endpoint_name, role, result)
+                
+                elif msg_type == "DONE":
+                    # All tests completed
+                    self._on_streaming_finished()
+                    return
+                
+                elif msg_type == "STOPPED":
+                    # Tests were stopped
+                    self._on_streaming_stopped()
+                    return
+                    
+            except Exception as e:
+                print(f"Error processing result: {e}")
+                continue
+        
+        # Check for errors
+        if not self.error_queue.empty():
+            error_msg = self.error_queue.get()
+            self._on_streaming_failed(error_msg)
+            return
+        
+        # Check if process has died unexpectedly
         if not self.process.is_alive():
-            self.poll_timer.stop()
-
-            # Hide progress dialog
-            if self.progress_dialog:
-                self.progress_dialog.stop()
-
-            # Check for errors first
-            if not self.error_queue.empty():
-                error_msg = self.error_queue.get()
-                self._on_failed(error_msg)
-            # Check for results
-            elif not self.result_queue.empty():
-                results = self.result_queue.get()
-                self._on_finished(results)
-            else:
-                # Process finished but no result or error (unexpected)
-                self._on_failed("Process finished unexpectedly without results")
-
-            # Clean up
-            self.process.join()
-            self.process = None
-            self.result_queue = None
-            self.error_queue = None
-            self.poll_timer = None
-
-    def _on_finished(self, results: dict):
-        self.results = results
-        self.resultsView.render(results)
-        print("DEBUG: Run finished with results:")
-        self.statusBar().showMessage("Done", 3000)
-
-    def _on_failed(self, msg: str):
-        QtWidgets.QMessageBox.critical(self, "Run Failed", msg)
+            # Process finished, but we didn't get DONE or STOPPED message
+            # Process remaining messages in queue
+            while not self.result_queue.empty():
+                try:
+                    msg_type, endpoint_name, role, result = self.result_queue.get_nowait()
+                    if msg_type == "RESULT" and endpoint_name in self.streaming_results:
+                        self.streaming_results[endpoint_name][role] = result
+                        self.resultsView.update_result(endpoint_name, role, result)
+                except:
+                    break
+            
+            self._on_streaming_finished()
+    
+    def _on_streaming_finished(self):
+        """Handle completion of streaming tests"""
+        self._cleanup_streaming()
+        self.header.set_running_state(False)
+        self.results = self.streaming_results
+        self.statusBar().showMessage("Tests completed", 3000)
+    
+    def _on_streaming_stopped(self):
+        """Handle user-requested stop"""
+        self._cleanup_streaming()
+        self.header.set_running_state(False)
+        self.statusBar().showMessage("Tests stopped by user", 3000)
+    
+    def _on_streaming_failed(self, msg: str):
+        """Handle streaming test failure"""
+        self._cleanup_streaming()
+        self.header.set_running_state(False)
+        QtWidgets.QMessageBox.critical(self, "Test Failed", msg)
         self.statusBar().clearMessage()
     
-    def _cancel_run(self):
-        """Handle cancellation request from progress dialog."""
+    def _cleanup_streaming(self):
+        """Clean up streaming resources"""
+        if self.poll_timer:
+            self.poll_timer.stop()
+            self.poll_timer = None
+        
         if self.process and self.process.is_alive():
-            # Update dialog message
-            if self.progress_dialog:
-                self.progress_dialog.set_message("Cancelling...")
-                self.progress_dialog.set_detail("Stopping test execution")
-            
-            # Terminate the process
-            self.process.terminate()
-            self.process.join(timeout=1.0)  # Wait up to 1 second
-            
+            self.process.join(timeout=1.0)
             if self.process.is_alive():
-                # Force kill if still alive
-                self.process.kill()
+                self.process.terminate()
                 self.process.join()
-            
-            # Stop polling
-            if self.poll_timer:
-                self.poll_timer.stop()
-                self.poll_timer = None
-            
-            # Hide progress dialog
-            if self.progress_dialog:
-                self.progress_dialog.stop()
-            
-            # Clean up
-            self.process = None
-            self.result_queue = None
-            self.error_queue = None
-            
-            # Update status bar
-            self.statusBar().showMessage("Test run cancelled", 3000)
+        
+        self.process = None
+        self.result_queue = None
+        self.error_queue = None
+        self.stop_event = None
 
     def closeEvent(self, event):
         """Clean up multiprocessing resources when window is closed."""
-        if self.process and self.process.is_alive():
-            self.process.terminate()
-            self.process.join(timeout=1.0)  # Wait up to 1 second
-            if self.process.is_alive():
-                self.process.kill()  # Force kill if still alive
-
-        if self.poll_timer:
-            self.poll_timer.stop()
+        # Stop any running tests
+        if self.stop_event:
+            self.stop_event.set()
         
-        if self.progress_dialog:
-            self.progress_dialog.stop()
-
+        # Clean up streaming resources
+        self._cleanup_streaming()
+        
+        # Reset header button state
+        if hasattr(self, 'header'):
+            self.header.set_running_state(False)
+        
         super().closeEvent(event)
 
 
