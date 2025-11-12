@@ -10,6 +10,29 @@ The integration testing setup includes:
 2. **Docker Configuration** - Dockerfile and docker-compose for easy deployment
 3. **Integration Tests** - Comprehensive test suite validating Auth Matrix functionality
 4. **CI/CD Pipeline** - Automated testing in GitHub Actions
+5. **Helper Tools** - Scripts and Makefile for convenient local testing
+
+## Files and Structure
+
+```
+.
+├── test_api/                          # Test API server
+│   ├── main.py                        # FastAPI application with endpoints
+│   ├── requirements.txt               # Python dependencies
+│   ├── Dockerfile                     # Container definition
+│   ├── .dockerignore                  # Files to exclude from image
+│   └── README.md                      # Test API documentation
+├── tests/
+│   ├── test_integration.py            # Integration tests (requires Docker)
+│   └── test_fastapi_server.py         # Unit tests for API (no Docker)
+├── docker-compose.yml                 # Docker Compose configuration
+├── test_api_spec.json                 # Auth Matrix spec for test API
+├── run_integration_tests.sh           # Helper script to run tests
+├── Makefile                           # Convenient test commands
+├── INTEGRATION_TESTING.md             # This file
+└── .github/workflows/
+    └── integration-tests.yml          # CI/CD workflow
+```
 
 ## Architecture
 
@@ -62,7 +85,33 @@ The integration testing setup includes:
 - Python 3.8+ installed
 - Git repository cloned
 
-### Running Locally
+### Method 1: Using the Helper Script (Recommended)
+
+```bash
+# Install test dependencies
+pip install pytest pytest-cov requests
+
+# Run the integration test script (builds, starts, tests, and cleans up)
+./run_integration_tests.sh
+```
+
+### Method 2: Using Make
+
+```bash
+# View all available commands
+make help
+
+# Run full integration test (build + start + test + cleanup)
+make integration-test
+
+# Or run steps individually
+make build              # Build Docker image
+make start              # Start container
+pytest tests/test_integration.py -v
+make stop               # Stop container
+```
+
+### Method 3: Using Docker Compose
 
 1. **Start the test API server:**
    ```bash
@@ -100,6 +149,8 @@ The integration testing setup includes:
    ```bash
    docker-compose down
    ```
+
+### Method 4: Manual Docker Commands
 
 ## Test API Endpoints
 
