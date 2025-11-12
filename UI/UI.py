@@ -9,7 +9,63 @@ from .views.Results import ResultsSection
 from .views.Theme import primary, secondary, background, text, border, lines, bg2
 from .views.ModernStyles import get_main_stylesheet, apply_animation_properties
 from .views.ModernStyles import get_main_stylesheet, apply_animation_properties
-from .components import LogoHeader, multiline_input, TabsComponent
+from .components import LogoHeader, multiline_input, show_text, TabsComponent
+
+
+def streaming_worker_function(spec, result_queue, error_queue, stop_event):
+    """Worker function that streams results as they complete."""
+    try:
+        for ep in spec["endpoints"]:
+            # Check if we should stop
+            if stop_event.is_set():
+                result_queue.put(("STOPPED", None, None, None))
+                return
+
+            name = ep.get("name") or ep["path"]
+
+            for role, roleSpec in spec["roles"].items():
+                # Check if we should stop
+                if stop_event.is_set():
+                    result_queue.put(("STOPPED", None, None, None))
+                    return
+
+                expect = ep.get("expect", {}).get(role)
+                if not expect:
+                    result_queue.put(("RESULT", name, role, {"status": "SKIP"}))
+                    continue
+
+                # Build request
+                url = spec["base_url"].rstrip("/") + ep["path"]
+                headers = dict(spec.get("default_headers", {}))
+                auth = roleSpec.get("auth", {})
+                if auth.get("type") == "bearer":
+                    headers["Authorization"] = f"Bearer {auth.get('token')}"
+
+                # Run request
+                start = time.time()
+                try:
+                    r = requests.request(ep.get("method", "GET"), url, headers=headers, timeout=30)
+                    latency = int((time.time() - start) * 1000)
+                except Exception as e:
+                    result_queue.put(("RESULT", name, role, {"status": "FAIL", "error": str(e)}))
+                    continue
+
+                # Check
+                allowed = expect.get("status")
+                if isinstance(allowed, list):
+                    ok = r.status_code in allowed
+                else:
+                    ok = r.status_code == allowed
+
+                if not ok:
+                    result_queue.put(("RESULT", name, role, {"status": "FAIL", "http": r.status_code}))
+                else:
+                    result_queue.put(("RESULT", name, role, {"status": "PASS", "http": r.status_code, "latency_ms": latency}))
+
+        # Signal completion
+        result_queue.put(("DONE", None, None, None))
+    except Exception as e:
+        error_queue.put(str(e))
 
 
 def worker_process_function(runner_func, spec, result_queue, error_queue):
@@ -29,17 +85,22 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.setWindowTitle("Auth Matrix")
 
+
         # Set window icon
         self._set_window_icon()
+
 
         # Set minimum size for responsiveness
         self.setMinimumSize(700, 500)
 
+
         # Size window to fit available screen space
         self._size_to_screen()
 
+
         # Enable layout animations for smooth resizing
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground, False)
+
 
         # Center the window on the screen
         self._center_window()
@@ -48,11 +109,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.store = SpecStore()
         self.results: Optional[Dict[str, Dict[str, Dict[str, Any]]]] = None
 
-        # Multiprocessing attributes
+        # Multiprocessing attributes for streaming
         self.process: Optional[multiprocessing.Process] = None
         self.result_queue: Optional[multiprocessing.Queue] = None
         self.error_queue: Optional[multiprocessing.Queue] = None
+        self.stop_event: Optional[multiprocessing.Event] = None
         self.poll_timer: Optional[QtCore.QTimer] = None
+
+        # Track streaming results
+        self.streaming_results: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
         # Apply modern stylesheet
         self.setStyleSheet(get_main_stylesheet())
@@ -81,6 +146,7 @@ class MainWindow(QtWidgets.QMainWindow):
         central_layout.setContentsMargins(0, 0, 0, 0)
         central_layout.setSpacing(0)
 
+
         # Create scrollable content area
         scroll_area = QtWidgets.QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -88,6 +154,7 @@ class MainWindow(QtWidgets.QMainWindow):
         scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         central_layout.addWidget(scroll_area)
+
 
         # Content widget inside scroll area
         content_widget = QtWidgets.QWidget()
@@ -100,6 +167,7 @@ class MainWindow(QtWidgets.QMainWindow):
         url_label = QtWidgets.QLabel("<b>Base URL</b>")
         url_label.setProperty("class", "title")
         vlayout.addWidget(url_label)
+
 
         self.baseUrlEdit = QtWidgets.QLineEdit()
         self.baseUrlEdit.setPlaceholderText("http://localhost:3000")
@@ -123,6 +191,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.header.importRequested.connect(self._import_spec)
         self.header.exportRequested.connect(self._export_spec)
         self.header.runRequested.connect(self._run)
+        self.header.stopRequested.connect(self._stop_run)
 
         # Connect to spec changes to update UI
         self.store.specChanged.connect(self._on_spec_changed)
@@ -145,6 +214,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._handle_responsive_layout()
         return super().eventFilter(obj, event)
 
+
     def _handle_responsive_layout(self):
         """Adjust layout based on window size for responsiveness."""
         # Responsive adjustments are primarily handled through:
@@ -161,15 +231,19 @@ class MainWindow(QtWidgets.QMainWindow):
             # Get available screen geometry (excludes taskbars, etc.)
             available = screen.availableGeometry()
 
+
             # Use 80% of available screen size, with reasonable max dimensions
             target_width = min(int(available.width() * 0.8), 1400)
             target_height = min(int(available.height() * 0.85), 900)
+
 
             # Ensure we don't go below minimum size
             target_width = max(target_width, 700)
             target_height = max(target_height, 500)
 
+
             self.resize(target_width, target_height)
+
 
     def _center_window(self):
         """Center the window on the primary screen"""
@@ -192,10 +266,12 @@ class MainWindow(QtWidgets.QMainWindow):
         import os
         from pathlib import Path
 
+
         # Try to find the icon file
         # Prefer .ico on Windows for better multi-size support
         icon_extensions = [".ico", ".png"]
         icon_path = None
+
 
         for ext in icon_extensions:
             # When running from source
@@ -204,12 +280,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 icon_path = candidate_path
                 break
 
+
             # When running from PyInstaller bundle
             if hasattr(sys, "_MEIPASS"):
                 candidate_path = Path(sys._MEIPASS) / "UI" / "assets" / f"favicon{ext}"
                 if candidate_path.exists():
                     icon_path = candidate_path
                     break
+
 
         if icon_path:
             icon = QtGui.QIcon(str(icon_path))
@@ -292,79 +370,154 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # Run
     def _run(self):
+        """Start running tests with streaming results"""
         if not self.store.spec.get("base_url"):
             QtWidgets.QMessageBox.warning(self, "Run", "Base URL is required")
             return
-        url = self.store.spec["base_url"].rstrip("/")
-        self.statusBar().showMessage("Running… test on: " + url)
-        self.setEnabled(False)
 
-        # Create multiprocessing queues for communication
+        url = self.store.spec["base_url"].rstrip("/")
+        self.statusBar().showMessage("Running tests on: " + url)
+
+        # Set button to running state
+        self.header.set_running_state(True)
+
+        # Initialize streaming results with empty structure
+        self.streaming_results = {}
+        for ep in self.store.spec.get("endpoints", []):
+            name = ep.get("name") or ep["path"]
+            self.streaming_results[name] = {}
+            for role in self.store.spec.get("roles", {}).keys():
+                self.streaming_results[name][role] = {"status": "⏳"}  # Pending
+
+        # Initialize results table with empty/pending state
+        self.resultsView.render(self.streaming_results)
+
+        # Switch to Results tab
+        self.tabs.setCurrentIndex(3)  # Results tab is typically index 3
+
+        # Create multiprocessing resources
         self.result_queue = multiprocessing.Queue()
         self.error_queue = multiprocessing.Queue()
+        self.stop_event = multiprocessing.Event()
 
         # Create and start worker process
         self.process = multiprocessing.Process(
-            target=worker_process_function,
-            args=(self.runner, self.store.spec, self.result_queue, self.error_queue),
+            target=streaming_worker_function,
+            args=(self.store.spec, self.result_queue, self.error_queue, self.stop_event),
         )
         self.process.start()
 
-        # Set up timer to poll for results
+        # Set up timer to poll for streaming results
         self.poll_timer = QtCore.QTimer()
-        self.poll_timer.timeout.connect(self._poll_process)
+        self.poll_timer.timeout.connect(self._poll_streaming_results)
         self.poll_timer.start(100)  # Poll every 100ms
 
-    def _poll_process(self):
-        """Poll the worker process for completion."""
+    def _stop_run(self):
+        """Stop the currently running tests"""
+        if self.stop_event:
+            self.stop_event.set()
+        self.statusBar().showMessage("Stopping tests...", 2000)
+
+    def _poll_streaming_results(self):
+        """Poll for streaming results from the worker process"""
         if not self.process:
             return
 
-        # Check if process has finished
+        # Process all available results in the queue
+        while not self.result_queue.empty():
+            try:
+                msg_type, endpoint_name, role, result = self.result_queue.get_nowait()
+
+                if msg_type == "RESULT":
+                    # Update the specific result
+                    if endpoint_name in self.streaming_results:
+                        self.streaming_results[endpoint_name][role] = result
+                        self.resultsView.update_result(endpoint_name, role, result)
+
+                elif msg_type == "DONE":
+                    # All tests completed
+                    self._on_streaming_finished()
+                    return
+
+                elif msg_type == "STOPPED":
+                    # Tests were stopped
+                    self._on_streaming_stopped()
+                    return
+
+            except Exception as e:
+                print(f"Error processing result: {e}")
+                continue
+
+        # Check for errors
+        if not self.error_queue.empty():
+            error_msg = self.error_queue.get()
+            self._on_streaming_failed(error_msg)
+            return
+
+        # Check if process has died unexpectedly
         if not self.process.is_alive():
+            # Process finished, but we didn't get DONE or STOPPED message
+            # Process remaining messages in queue
+            while not self.result_queue.empty():
+                try:
+                    msg_type, endpoint_name, role, result = self.result_queue.get_nowait()
+                    if msg_type == "RESULT" and endpoint_name in self.streaming_results:
+                        self.streaming_results[endpoint_name][role] = result
+                        self.resultsView.update_result(endpoint_name, role, result)
+                except:
+                    break
+
+            self._on_streaming_finished()
+
+    def _on_streaming_finished(self):
+        """Handle completion of streaming tests"""
+        self._cleanup_streaming()
+        self.header.set_running_state(False)
+        self.results = self.streaming_results
+        self.statusBar().showMessage("Tests completed", 3000)
+
+    def _on_streaming_stopped(self):
+        """Handle user-requested stop"""
+        self._cleanup_streaming()
+        self.header.set_running_state(False)
+        self.statusBar().showMessage("Tests stopped by user", 3000)
+
+    def _on_streaming_failed(self, msg: str):
+        """Handle streaming test failure"""
+        self._cleanup_streaming()
+        self.header.set_running_state(False)
+        QtWidgets.QMessageBox.critical(self, "Test Failed", msg)
+        self.statusBar().clearMessage()
+
+    def _cleanup_streaming(self):
+        """Clean up streaming resources"""
+        if self.poll_timer:
             self.poll_timer.stop()
-
-            # Check for errors first
-            if not self.error_queue.empty():
-                error_msg = self.error_queue.get()
-                self._on_failed(error_msg)
-            # Check for results
-            elif not self.result_queue.empty():
-                results = self.result_queue.get()
-                self._on_finished(results)
-            else:
-                # Process finished but no result or error (unexpected)
-                self._on_failed("Process finished unexpectedly without results")
-
-            # Clean up
-            self.process.join()
-            self.process = None
-            self.result_queue = None
-            self.error_queue = None
             self.poll_timer = None
 
-    def _on_finished(self, results: dict):
-        self.results = results
-        self.resultsView.render(results)
-        self.setEnabled(True)
-        print("DEBUG: Run finished with results:")
-        self.statusBar().showMessage("Done", 3000)
+        if self.process and self.process.is_alive():
+            self.process.join(timeout=1.0)
+            if self.process.is_alive():
+                self.process.terminate()
+                self.process.join()
 
-    def _on_failed(self, msg: str):
-        QtWidgets.QMessageBox.critical(self, "Run Failed", msg)
-        self.setEnabled(True)
-        self.statusBar().clearMessage()
+        self.process = None
+        self.result_queue = None
+        self.error_queue = None
+        self.stop_event = None
 
     def closeEvent(self, event):
         """Clean up multiprocessing resources when window is closed."""
-        if self.process and self.process.is_alive():
-            self.process.terminate()
-            self.process.join(timeout=1.0)  # Wait up to 1 second
-            if self.process.is_alive():
-                self.process.kill()  # Force kill if still alive
+        # Stop any running tests
+        if self.stop_event:
+            self.stop_event.set()
 
-        if self.poll_timer:
-            self.poll_timer.stop()
+        # Clean up streaming resources
+        self._cleanup_streaming()
+
+        # Reset header button state
+        if hasattr(self, 'header'):
+            self.header.set_running_state(False)
 
         super().closeEvent(event)
 
@@ -382,6 +535,7 @@ class PostmanConfigDialog(QtWidgets.QDialog):
 
         layout = QtWidgets.QVBoxLayout(self)
 
+
     def _size_dialog_to_parent(self, width_ratio=0.7, height_ratio=0.7):
         """Size dialog relative to parent window or screen"""
         if self.parent() and isinstance(self.parent(), QtWidgets.QWidget):
@@ -397,12 +551,15 @@ class PostmanConfigDialog(QtWidgets.QDialog):
             else:
                 return
 
+
         # Ensure we don't go below minimum size
         current_min = self.minimumSize()
         target_width = max(target_width, current_min.width())
         target_height = max(target_height, current_min.height())
 
+
         self.resize(target_width, target_height)
+
 
         layout = QtWidgets.QVBoxLayout(self)
 
@@ -472,6 +629,7 @@ class PostmanConfigDialog(QtWidgets.QDialog):
 
         layout.addLayout(button_layout)
 
+
     def _size_dialog_to_parent(self, width_ratio=0.7, height_ratio=0.7):
         """Size dialog relative to parent window or screen"""
         if self.parent() and isinstance(self.parent(), QtWidgets.QWidget):
@@ -487,10 +645,12 @@ class PostmanConfigDialog(QtWidgets.QDialog):
             else:
                 return
 
+
         # Ensure we don't go below minimum size
         current_min = self.minimumSize()
         target_width = max(target_width, current_min.width())
         target_height = max(target_height, current_min.height())
+
 
         self.resize(target_width, target_height)
 
@@ -781,35 +941,186 @@ class ExportDialog(QtWidgets.QDialog):
             )
             return
 
-        # Ask user to select directory to save all collections
-        directory = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "Select Directory to Save Postman Collections"
+        # Show dialog to select where to save the collections
+        dialog = MultiCollectionExportDialog(collections, self)
+        if dialog.exec() == QtWidgets.QDialog.Accepted:
+            self.accept()
+        else:
+            # User cancelled, but we stay in the export dialog
+            pass
+
+
+class MultiCollectionExportDialog(QtWidgets.QDialog):
+    """Dialog for viewing and saving multiple Postman collections"""
+
+    def __init__(self, collections: Dict[str, str], parent=None):
+        super().__init__(parent)
+        self.collections = collections
+        self.setWindowTitle("Export Multiple Postman Collections")
+        self.setModal(True)
+        self.setMinimumSize(500, 400)
+        self._size_dialog_to_parent(0.7, 0.7)
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+    def _size_dialog_to_parent(self, width_ratio=0.7, height_ratio=0.7):
+        """Size dialog relative to parent window or screen"""
+        if self.parent() and isinstance(self.parent(), QtWidgets.QWidget):
+            parent_size = self.parent().size()
+            target_width = int(parent_size.width() * width_ratio)
+            target_height = int(parent_size.height() * height_ratio)
+        else:
+            screen = QtWidgets.QApplication.primaryScreen()
+            if screen:
+                available = screen.availableGeometry()
+                target_width = int(available.width() * width_ratio)
+                target_height = int(available.height() * height_ratio)
+            else:
+                return
+
+        # Ensure we don't go below minimum size
+        current_min = self.minimumSize()
+        target_width = max(target_width, current_min.width())
+        target_height = max(target_height, current_min.height())
+
+        self.resize(target_width, target_height)
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        # Info label
+        info_label = QtWidgets.QLabel(
+            f"Generated {len(self.collections)} Postman collection(s), one per role.\n"
+            "Each collection contains only endpoints where the role expects success (2xx status)."
+        )
+        info_label.setWordWrap(True)
+        layout.addWidget(info_label)
+
+        # Tab widget to show each collection
+        tabs = QtWidgets.QTabWidget()
+        layout.addWidget(tabs)
+
+        # Create a tab for each collection
+        for role_name, collection_json in self.collections.items():
+            tab = QtWidgets.QWidget()
+            tab_layout = QtWidgets.QVBoxLayout(tab)
+
+            # Parse to get collection info
+            try:
+                collection_data = json.loads(collection_json)
+                item_count = len(collection_data.get("item", []))
+                has_auth = "auth" in collection_data
+
+                info = f"Collection: {collection_data['info']['name']}\n"
+                info += f"Endpoints: {item_count}\n"
+                info += f"Authentication: {'Yes' if has_auth else 'No'}"
+
+                info_widget = QtWidgets.QLabel(info)
+                tab_layout.addWidget(info_widget)
+            except:
+                pass
+
+            # Text edit to show the JSON
+            text_edit = QtWidgets.QPlainTextEdit()
+            text_edit.setPlainText(collection_json)
+            text_edit.setReadOnly(True)
+            text_edit.setFont(QtGui.QFont("Courier", 9))
+            tab_layout.addWidget(text_edit)
+
+            # Add save button for this collection
+            save_btn = QtWidgets.QPushButton(
+                f"Save {role_name.capitalize()} Collection..."
+            )
+            save_btn.clicked.connect(
+                partial(self._save_collection, role_name, collection_json)
+            )
+            tab_layout.addWidget(save_btn)
+
+            tabs.addTab(tab, role_name.capitalize())
+
+        # Buttons at bottom
+        button_layout = QtWidgets.QHBoxLayout()
+
+        save_all_btn = QtWidgets.QPushButton("Save All Collections...")
+        save_all_btn.clicked.connect(self._save_all_collections)
+        button_layout.addWidget(save_all_btn)
+
+        close_btn = QtWidgets.QPushButton("Close")
+        close_btn.clicked.connect(self.accept)
+        button_layout.addWidget(close_btn)
+
+        layout.addLayout(button_layout)
+
+    def _size_dialog_to_parent(self, width_ratio=0.7, height_ratio=0.7):
+        """Size dialog relative to parent window or screen"""
+        if self.parent() and isinstance(self.parent(), QtWidgets.QWidget):
+            parent_size = self.parent().size()
+            target_width = int(parent_size.width() * width_ratio)
+            target_height = int(parent_size.height() * height_ratio)
+        else:
+            screen = QtWidgets.QApplication.primaryScreen()
+            if screen:
+                available = screen.availableGeometry()
+                target_width = int(available.width() * width_ratio)
+                target_height = int(available.height() * height_ratio)
+            else:
+                return
+
+        # Ensure we don't go below minimum size
+        current_min = self.minimumSize()
+        target_width = max(target_width, current_min.width())
+        target_height = max(target_height, current_min.height())
+
+        self.resize(target_width, target_height)
+
+    def _save_collection(self, role_name: str, collection_json: str):
+        """Save a single collection to a file"""
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self,
+            f"Save {role_name.capitalize()} Collection",
+            f"{role_name}.postman_collection.json",
+            "JSON Files (*.json);;All Files (*)",
         )
 
-        if not directory:
-            return
-
-        try:
-            saved_files = []
-            for role_name, collection_json in collections.items():
-                filename = os.path.join(
-                    directory, f"{role_name}.postman_collection.json"
-                )
+        if filename:
+            try:
                 with open(filename, "w", encoding="utf-8") as f:
                     f.write(collection_json)
-                saved_files.append(filename)
+                QtWidgets.QMessageBox.information(
+                    self, "Success", f"Collection saved to {filename}"
+                )
+            except Exception as e:
+                QtWidgets.QMessageBox.critical(
+                    self, "Error", f"Failed to save collection: {str(e)}"
+                )
 
-            file_list = "\n".join([f"- {os.path.basename(f)}" for f in saved_files])
-            QtWidgets.QMessageBox.information(
-                self,
-                "Export Successful",
-                f"Saved {len(saved_files)} Postman collection(s) to:\n{directory}\n\nFiles:\n{file_list}",
-            )
-            self.accept()
-        except Exception as e:
-            QtWidgets.QMessageBox.critical(
-                self, "Export Error", f"Failed to save collections:\n{str(e)}"
-            )
+    def _save_all_collections(self):
+        """Save all collections to a directory"""
+        directory = QtWidgets.QFileDialog.getExistingDirectory(
+            self, "Select Directory to Save All Collections"
+        )
+
+        if directory:
+            try:
+                saved_files = []
+                for role_name, collection_json in self.collections.items():
+                    filename = os.path.join(
+                        directory, f"{role_name}.postman_collection.json"
+                    )
+                    with open(filename, "w", encoding="utf-8") as f:
+                        f.write(collection_json)
+                    saved_files.append(filename)
+
+                file_list = "\n".join([f"- {os.path.basename(f)}" for f in saved_files])
+                QtWidgets.QMessageBox.information(
+                    self,
+                    "Export Successful",
+                    f"Saved {len(saved_files)} Postman collection(s) to:\n{directory}\n\nFiles:\n{file_list}",
+                )
+                self.accept()
+            except Exception as e:
+                QtWidgets.QMessageBox.critical(
+                    self, "Export Error", f"Failed to save collections:\n{str(e)}"
+                )
 
 
 class ImportDialog(QtWidgets.QDialog):
@@ -896,27 +1207,7 @@ class ImportDialog(QtWidgets.QDialog):
 
         # Store for multi-collection import
         self.imported_collections = {}
-        
-        # Center the dialog on screen
-        self._center_on_screen()
-    
-    def _center_on_screen(self):
-        """Center the dialog on the screen or parent window"""
-        if self.parent() and isinstance(self.parent(), QtWidgets.QWidget):
-            # Center relative to parent
-            parent_geometry = self.parent().geometry()
-            x = parent_geometry.x() + (parent_geometry.width() - self.width()) // 2
-            y = parent_geometry.y() + (parent_geometry.height() - self.height()) // 2
-            self.move(x, y)
-        else:
-            # Center on primary screen
-            screen = QtWidgets.QApplication.primaryScreen()
-            if screen:
-                screen_geometry = screen.availableGeometry()
-                x = screen_geometry.x() + (screen_geometry.width() - self.width()) // 2
-                y = screen_geometry.y() + (screen_geometry.height() - self.height()) // 2
-                self.move(x, y)
-    
+
     def _size_dialog_to_parent(self, width_ratio=0.7, height_ratio=0.7):
         """Size dialog relative to parent window or screen"""
         if self.parent() and isinstance(self.parent(), QtWidgets.QWidget):
@@ -932,10 +1223,12 @@ class ImportDialog(QtWidgets.QDialog):
             else:
                 return
 
+
         # Ensure we don't go below minimum size
         current_min = self.minimumSize()
         target_width = max(target_width, current_min.width())
         target_height = max(target_height, current_min.height())
+
 
         self.resize(target_width, target_height)
 
