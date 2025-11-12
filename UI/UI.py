@@ -1110,17 +1110,17 @@ class MultiCollectionExportDialog(QtWidgets.QDialog):
                         f.write(collection_json)
                     saved_files.append(filename)
 
-            file_list = "\n".join([f"- {os.path.basename(f)}" for f in saved_files])
-            QtWidgets.QMessageBox.information(
-                self,
-                "Export Successful",
-                f"Saved {len(saved_files)} Postman collection(s) to:\n{directory}\n\nFiles:\n{file_list}",
-            )
-            self.accept()
-        except Exception as e:
-            QtWidgets.QMessageBox.critical(
-                self, "Export Error", f"Failed to save collections:\n{str(e)}"
-            )
+                file_list = "\n".join([f"- {os.path.basename(f)}" for f in saved_files])
+                QtWidgets.QMessageBox.information(
+                    self,
+                    "Export Successful",
+                    f"Saved {len(saved_files)} Postman collection(s) to:\n{directory}\n\nFiles:\n{file_list}",
+                )
+                self.accept()
+            except Exception as e:
+                QtWidgets.QMessageBox.critical(
+                    self, "Export Error", f"Failed to save collections:\n{str(e)}"
+                )
 
 
 class ImportDialog(QtWidgets.QDialog):
