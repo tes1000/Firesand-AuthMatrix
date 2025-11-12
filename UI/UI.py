@@ -960,8 +960,8 @@ class ImportDialog(QtWidgets.QDialog):
         self.store = store
         self.setWindowTitle("Import API Specification")
         self.setModal(True)
-        self.setMinimumSize(400, 250)
-        self._size_dialog_to_parent(0.4, 0.35)
+        self.setMinimumSize(500, 400)
+        self.resize(600, 500)  # Set a fixed reasonable size instead of relative sizing
 
         layout = QtWidgets.QVBoxLayout(self)
 
@@ -1036,6 +1036,26 @@ class ImportDialog(QtWidgets.QDialog):
 
         # Store for multi-collection import
         self.imported_collections = {}
+        
+        # Center the dialog on screen
+        self._center_on_screen()
+    
+    def _center_on_screen(self):
+        """Center the dialog on the screen or parent window"""
+        if self.parent() and isinstance(self.parent(), QtWidgets.QWidget):
+            # Center relative to parent
+            parent_geometry = self.parent().geometry()
+            x = parent_geometry.x() + (parent_geometry.width() - self.width()) // 2
+            y = parent_geometry.y() + (parent_geometry.height() - self.height()) // 2
+            self.move(x, y)
+        else:
+            # Center on primary screen
+            screen = QtWidgets.QApplication.primaryScreen()
+            if screen:
+                screen_geometry = screen.availableGeometry()
+                x = screen_geometry.x() + (screen_geometry.width() - self.width()) // 2
+                y = screen_geometry.y() + (screen_geometry.height() - self.height()) // 2
+                self.move(x, y)
     
     def _size_dialog_to_parent(self, width_ratio=0.7, height_ratio=0.7):
         """Size dialog relative to parent window or screen"""
@@ -1135,12 +1155,9 @@ class ImportDialog(QtWidgets.QDialog):
         layout = QtWidgets.QVBoxLayout(page)
 
         info_label = QtWidgets.QLabel(
-            "Import multiple Postman collections to automatically configure authorization patterns.\n\n"
-            "Example workflow:\n"
-            "• Import 'Admin.postman_collection.json' with admin endpoints\n"
-            "• Import 'User.postman_collection.json' with user endpoints\n"
-            "• Import 'Public.postman_collection.json' with public endpoints\n\n"
-            "The tool will automatically determine which roles can access which endpoints based on which collections they appear in."
+            "Import multiple Postman collections to automatically configure authorization patterns.\n"
+            "Import collections for different roles (e.g., Admin, User, Public) and the tool will "
+            "determine access patterns based on which collections contain which endpoints."
         )
         info_label.setWordWrap(True)
         layout.addWidget(info_label)
@@ -1174,7 +1191,7 @@ class ImportDialog(QtWidgets.QDialog):
         # Analysis preview
         self.analysis_text = QtWidgets.QTextEdit()
         self.analysis_text.setReadOnly(True)
-        self.analysis_text.setMaximumHeight(150)
+        self.analysis_text.setMaximumHeight(100)
         self.analysis_text.setPlaceholderText(
             "Authorization pattern analysis will appear here..."
         )
