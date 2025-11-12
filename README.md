@@ -197,7 +197,22 @@ FiresandsAuthMatrix/
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+
+### Third-Party Licenses
+
+This application uses PySide6, which is licensed under LGPL-3.0. This means:
+- ✅ You can use this software commercially
+- ✅ You can distribute the application
+- ✅ PySide6 is dynamically linked (LGPL compliant)
+- ⚠️ Users must be able to replace the PySide6 library
+
+For complete third-party license information, see [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+
+**Key dependencies:**
+- **PySide6** (LGPL-3.0) - Qt6 Python bindings
+- **Requests** (Apache-2.0) - HTTP library
+- **Pillow** (HPND) - Image processing
 
 ## Support
 

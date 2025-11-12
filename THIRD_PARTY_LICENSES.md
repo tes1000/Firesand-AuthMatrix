@@ -16,7 +16,7 @@ This project complies with the LGPL-3.0 license requirements by:
 
 1. **Dynamic Linking**: PySide6 is dynamically linked (not statically compiled) into the application
 2. **Source Code Access**: The complete source code for PySide6 is available at the official repository
-3. **License Distribution**: The LGPL-3.0 license text is included with distributions (see `licenses/LGPL-3.0.txt`)
+3. **License Distribution**: The LGPL-3.0 license text is available online and referenced in all distributions
 4. **Attribution**: Proper attribution is provided in documentation and user-facing materials
 5. **Modification Rights**: Users can replace the PySide6 library with modified versions
 
@@ -34,9 +34,9 @@ Because this application uses PySide6 under LGPL-3.0:
 
 ### PySide6 License Text
 
-The full text of the GNU Lesser General Public License version 3.0 can be found in:
-- This repository: `licenses/LGPL-3.0.txt`
-- Online: https://www.gnu.org/licenses/lgpl-3.0.html
+The full text of the GNU Lesser General Public License version 3.0 can be found online at:
+- https://www.gnu.org/licenses/lgpl-3.0.html
+- https://doc.qt.io/qtforpython/licenses.html
 
 ### Qt Framework
 
@@ -85,7 +85,7 @@ Used for image processing and icon handling.
 When distributing this software, you must:
 
 1. Include this `THIRD_PARTY_LICENSES.md` file or provide it upon request
-2. Include the full text of the LGPL-3.0 license (in `licenses/LGPL-3.0.txt`)
+2. Provide a link to the LGPL-3.0 license text (https://www.gnu.org/licenses/lgpl-3.0.html)
 3. Provide notice to users that PySide6/Qt is used under LGPL-3.0
 4. Inform users they can obtain the PySide6 source code and can replace the library
 
