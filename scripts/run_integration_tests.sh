@@ -12,6 +12,17 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Check if pytest is installed
+if ! command -v pytest &> /dev/null; then
+    echo -e "${RED}Error: pytest is not installed${NC}"
+    echo ""
+    echo "Please install pytest first using one of the following:"
+    echo "  pip install pytest"
+    echo "  pip install -r requirements.txt"
+    echo ""
+    exit 1
+fi
+
 # Check if Docker is available
 if ! command -v docker &> /dev/null; then
     echo -e "${RED}Error: Docker is not installed or not in PATH${NC}"
@@ -28,7 +39,7 @@ else
 fi
 
 echo "Step 1: Building Docker image..."
-docker build -t authmatrix-test-api:latest ./test_api
+docker build -t authmatrix-test-api:latest ../test_api
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Docker image built successfully${NC}"
 else
@@ -63,7 +74,7 @@ done
 if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
     echo -e "${RED}✗ API failed to start${NC}"
     echo "Container logs:"
-    docker logs authmatrix-test-api
+    docker logs authmatrix-test-apiq
     docker stop authmatrix-test-api
     docker rm authmatrix-test-api
     exit 1
@@ -71,7 +82,7 @@ fi
 
 echo ""
 echo "Step 4: Running integration tests..."
-pytest tests/test_integration.py -v
+pytest ../tests/test_integration.py -v
 TEST_RESULT=$?
 
 echo ""
