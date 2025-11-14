@@ -70,13 +70,14 @@ class LogoHeader(QtWidgets.QWidget):
         center.addWidget(self.logoLabel)
         center.addStretch(1)
 
-        # Right layout with spinner next to run button
+        # Right layout with spinner after run button
         right = QtWidgets.QHBoxLayout()
         right.addStretch(1)
         right.addWidget(self.importBtn)
         right.addWidget(self.exportBtn)
-        right.addWidget(self.spinnerLabel)
         right.addWidget(self.runBtn)
+        right.addSpacing(8)  # Add spacing between Run button and spinner
+        right.addWidget(self.spinnerLabel)
 
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(20, 0, 20, 0)  # Logo margins
@@ -128,7 +129,7 @@ class LogoHeader(QtWidgets.QWidget):
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
 
         # Draw circular arc for spinner
-        pen = QtGui.QPen(QtGui.QColor("#007AFF"))  # Blue color
+        pen = QtGui.QPen(QtGui.QColor("#CE2929"))  # Primary red color
         pen.setWidth(2)
         pen.setCapStyle(QtCore.Qt.RoundCap)
         painter.setPen(pen)
