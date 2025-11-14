@@ -18,7 +18,7 @@ class KVRow(QtWidgets.QWidget):
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)  # Key
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)           # Value
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)             # Actions - fixed width
-        self.list.setColumnWidth(2, 90)  # Actions column - fixed width for delete button
+        self.list.setColumnWidth(2, 150)  # Actions column - fixed width for delete button
         self.list.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.list.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
@@ -62,7 +62,7 @@ class KVRow(QtWidgets.QWidget):
             self.list.setItem(i, 1, QtWidgets.QTableWidgetItem(str(v)))
             
             # Set row height to accommodate button
-            self.list.setRowHeight(i, 45)
+            self.list.setRowHeight(i, 60)
             
             # Actions column with delete button
             actionsWidget = QtWidgets.QWidget()

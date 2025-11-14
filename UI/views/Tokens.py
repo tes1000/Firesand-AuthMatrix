@@ -29,7 +29,7 @@ class TokensSection(QtWidgets.QWidget):
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)  # Auth
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)           # Token
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)             # Actions - fixed width
-        self.table.setColumnWidth(3, 90)  # Actions column - fixed width for delete button
+        self.table.setColumnWidth(3, 150)  # Actions column - fixed width for delete button
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
@@ -76,7 +76,7 @@ class TokensSection(QtWidgets.QWidget):
             self.table.setItem(i, 2, QtWidgets.QTableWidgetItem(tok))
             
             # Set row height to accommodate button
-            self.table.setRowHeight(i, 45)
+            self.table.setRowHeight(i, 60)
             
             # Actions column with delete button
             actionsWidget = QtWidgets.QWidget()

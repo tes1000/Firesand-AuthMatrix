@@ -32,10 +32,10 @@ class EndpointsSection(QtWidgets.QWidget):
         
         # Set initial column widths for better proportions
         self.table.setColumnWidth(2, 300)  # Path column - reasonable fixed width
-        self.table.setColumnWidth(4, 140)  # Actions column - fixed width for buttons
+        self.table.setColumnWidth(4, 150)  # Actions column - fixed width for buttons
         
         # Set default row height to ensure text is visible
-        self.table.verticalHeader().setDefaultSectionSize(45)
+        self.table.verticalHeader().setDefaultSectionSize(60)
         
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
