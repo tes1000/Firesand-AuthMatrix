@@ -197,7 +197,22 @@ FiresandsAuthMatrix/
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+
+### Third-Party Licenses
+
+This application uses PySide6, which is licensed under LGPL-3.0. This means:
+- ✅ You can use this software commercially
+- ✅ You can distribute the application
+- ✅ PySide6 is dynamically linked (LGPL compliant)
+- ⚠️ Users must be able to replace the PySide6 library
+
+For complete third-party license information, see [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+
+**Key dependencies:**
+- **PySide6** (LGPL-3.0) - Qt6 Python bindings
+- **Requests** (Apache-2.0) - HTTP library
+- **Pillow** (HPND) - Image processing
 
 ## Support
 
@@ -211,10 +226,38 @@ If you encounter any issues or have questions:
 
 See the `demo_auth_matrix.json` file for a complete example configuration.
 
+## Integration Testing
+
+This project includes a comprehensive Docker-based integration testing infrastructure:
+
+- **FastAPI Test Server**: Containerized API with multiple authentication levels
+- **Automated Tests**: Full test suite validating Auth Matrix functionality
+- **CI/CD Pipeline**: Automated testing in GitHub Actions
+
+See [INTEGRATION_TESTING.md](INTEGRATION_TESTING.md) for detailed documentation on:
+- Running integration tests locally
+- Understanding the test API architecture
+- Adding new tests
+- Troubleshooting
+
+Quick start:
+```bash
+# Start the test API
+docker-compose up -d
+
+# Run integration tests
+pip install pytest requests
+pytest tests/test_integration.py -v
+
+# Test with Auth Matrix
+python Firesand_Auth_Matrix.py test_api_spec.json
+```
+
 ## Roadmap
 
+- [x] Integration testing with Docker
+- [x] Automated CI/CD pipeline
 - [ ] Support for additional authentication methods (API keys, OAuth)
 - [ ] Custom assertion scripting
-- [ ] Integration with CI/CD pipelines
 - [ ] Performance benchmarking features
 - [ ] Advanced reporting and analytics

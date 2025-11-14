@@ -27,9 +27,19 @@ pyinstaller AuthMatrix.spec
 
 The `AuthMatrix.spec` file ensures that:
 - The entire `UI` package is included (all components, views, and assets)
-- PySide6 dependencies are properly bundled
+- PySide6 dependencies are properly bundled **as dynamic libraries** (LGPL-3.0 compliant)
 - All hidden imports are detected
 - The binary is built as a windowed application (no console)
+- License files (`THIRD_PARTY_LICENSES.md`, `LICENSE-NOTICES.txt`) are included in distributions
+
+### LGPL-3.0 Compliance
+
+The build configuration ensures PySide6 is dynamically linked for commercial use compliance:
+- PySide6 libraries remain as separate `.so`/`.dll` files (not embedded in executable)
+- Users can replace PySide6 libraries without recompiling
+- License notices are automatically included in all distributions
+
+For detailed information, see [PYSIDE6_LGPL_COMPLIANCE.md](PYSIDE6_LGPL_COMPLIANCE.md).
 
 ## Troubleshooting
 
@@ -50,3 +60,28 @@ The `AuthMatrix.spec` file ensures that:
 The GitHub Actions workflows will automatically:
 - Run tests on pull requests (`ci.yml`)
 - Build executables for Windows, macOS, and Linux on releases (`release.yml`)
+
+## Verifying LGPL Compliance
+
+After building, verify that PySide6 is properly dynamically linked:
+
+### Linux
+```bash
+cd dist/AuthMatrix/
+ldd AuthMatrix | grep -i qt
+ls -la | grep -E "libQt|libPySide"
+```
+
+### Windows
+```cmd
+cd dist\AuthMatrix\
+dir *.dll | findstr Qt
+```
+
+### macOS
+```bash
+cd dist/AuthMatrix.app/Contents/MacOS/
+otool -L AuthMatrix | grep Qt
+```
+
+You should see Qt and PySide6 libraries as separate files, not embedded in the executable.
