@@ -1,0 +1,89 @@
+#!AUTHMATRIX
+{
+  "base_url": "http://localhost:8000",
+  "default_headers": {
+    "Accept": "application/json",
+    "Content-Type": "application/json"
+  },
+  "roles": {
+    "guest": {
+      "auth": {
+        "type": "none"
+      }
+    },
+    "user": {
+      "auth": {
+        "type": "bearer",
+        "token": "user_token_123"
+      }
+    },
+    "admin": {
+      "auth": {
+        "type": "bearer",
+        "token": "admin_token_456"
+      }
+    }
+  },
+  "endpoints": [
+    {
+      "name": "Health Check",
+      "method": "GET",
+      "path": "/health",
+      "expect": {
+        "guest": {"status": 200},
+        "user": {"status": 200},
+        "admin": {"status": 200}
+      }
+    },
+    {
+      "name": "Public Endpoint",
+      "method": "GET",
+      "path": "/public",
+      "expect": {
+        "guest": {"status": 200},
+        "user": {"status": 200},
+        "admin": {"status": 200}
+      }
+    },
+    {
+      "name": "User Profile",
+      "method": "GET",
+      "path": "/user/profile",
+      "expect": {
+        "guest": {"status": 403},
+        "user": {"status": 200},
+        "admin": {"status": 200}
+      }
+    },
+    {
+      "name": "User Data",
+      "method": "GET",
+      "path": "/user/data",
+      "expect": {
+        "guest": {"status": 403},
+        "user": {"status": 200},
+        "admin": {"status": 200}
+      }
+    },
+    {
+      "name": "Admin Dashboard",
+      "method": "GET",
+      "path": "/admin/dashboard",
+      "expect": {
+        "guest": {"status": 403},
+        "user": {"status": 403},
+        "admin": {"status": 200}
+      }
+    },
+    {
+      "name": "Admin Users",
+      "method": "GET",
+      "path": "/admin/users",
+      "expect": {
+        "guest": {"status": 403},
+        "user": {"status": 403},
+        "admin": {"status": 200}
+      }
+    }
+  ]
+}

@@ -1,4 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
+# PyInstaller spec file for AuthMatrix
+# 
+# LGPL-3.0 Compliance Notes:
+# - PySide6 is dynamically linked (not embedded in the executable)
+# - This configuration ensures LGPL compliance for commercial use
+# - All Qt shared libraries (.so/.dll) are kept separate from the executable
+# - Users can replace PySide6 libraries if needed
 
 block_cipher = None
 
@@ -8,6 +15,8 @@ a = Analysis(
     binaries=[],
     datas=[
         ('UI', 'UI'),  # Include the entire UI package
+        ('THIRD_PARTY_LICENSES.md', '.'),  # Include third-party licenses
+        ('LICENSE-NOTICES.txt', '.'),  # Include license notices for distribution
     ],
     hiddenimports=[
         'UI',
@@ -37,7 +46,12 @@ a = Analysis(
     noarchive=False,
 )
 
+# Ensure PySide6 libraries are kept as separate shared libraries (LGPL compliance)
+# PyInstaller automatically handles PySide6 as dynamic libraries
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+
+# Single-file executable mode with external dependencies
+# PySide6 .so/.dll files remain separate (LGPL compliant)
 
 exe = EXE(
     pyz,
@@ -59,4 +73,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='UI/assets/favicon.ico',
 )

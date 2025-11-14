@@ -1,95 +1,148 @@
 import os
 from PySide6 import QtCore, QtGui, QtWidgets
-from ..views.Theme import banner, background
+from ..views.Theme import banner
+from ..views.ModernStyles import get_header_stylesheet, apply_animation_properties
 
 
 class LogoHeader(QtWidgets.QWidget):
     """Header with logo, project name, theme color, Import/Export/Run buttons."""
     runRequested = QtCore.Signal()
+    stopRequested = QtCore.Signal()
     importRequested = QtCore.Signal()
     exportRequested = QtCore.Signal()
     themeColorChanged = QtCore.Signal(QtGui.QColor)
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumHeight(135)
-        self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent, True)
+        self.setMinimumHeight(140)
+        self.setMaximumHeight(160)
+        self.is_running = False
 
-        # Load banner once
-        self._banner = self._load_banner()
-        # Use theme primary color as background
-        self._bg = QtGui.QColor(banner)
+        # Apply modern header stylesheet
+        self.setStyleSheet(get_header_stylesheet())
+
+        # Load logo once and scale it to fixed size
+        logo_pixmap = self._load_logo()
 
         # --- UI ---
+        self.logoLabel = QtWidgets.QLabel()
+        self.logoLabel.setAlignment(QtCore.Qt.AlignCenter)
+        if not logo_pixmap.isNull():
+            # Scale logo to fixed height of 80px
+            scaled_logo = logo_pixmap.scaledToHeight(130, QtCore.Qt.SmoothTransformation)
+            self.logoLabel.setPixmap(scaled_logo)
+            self.logoLabel.setFixedSize(scaled_logo.size())
+
         self.nameEdit = QtWidgets.QLineEdit(placeholderText="Project Name (UI only)")
         self.nameEdit.setMinimumWidth(220)
-        self.nameEdit.setStyleSheet(f"""
-            QLineEdit {{
-                background-color: rgba(255,255,255,0.9);
-                border: 2px solid {background};
-                border-radius: 5px;
-                padding: 5px;
-                color: #333;
-            }}""")
+        apply_animation_properties(self.nameEdit)
 
         self.importBtn = QtWidgets.QPushButton("Import")
         self.exportBtn = QtWidgets.QPushButton("Export")
         self.runBtn = QtWidgets.QPushButton("Run")
         self.runBtn.setDefault(True)
-        
-        btn_css = f"""
-            QPushButton {{
-                background-color: rgba(255,255,255,0.9);
-                border: 2px solid {background};
-                border-radius: 5px;
-                padding: 8px 15px;
-                color: #333;
-                font-weight: bold;
-            }}
-            QPushButton:hover {{ background-color: rgba(255,255,255,1.0); }}
-        """
-        for b in (self.importBtn, self.exportBtn, self.runBtn): 
-            b.setStyleSheet(btn_css)
-        
+
+        # Apply animation properties to buttons
+        for btn in (self.importBtn, self.exportBtn, self.runBtn):
+            apply_animation_properties(btn)
+
         self.importBtn.clicked.connect(self.importRequested.emit)
         self.exportBtn.clicked.connect(self.exportRequested.emit)
-        self.runBtn.clicked.connect(self.runRequested.emit)
+        self.runBtn.clicked.connect(self._on_run_stop_clicked)
+
+        # Spinner label for inline animation (initially hidden)
+        self.spinnerLabel = QtWidgets.QLabel()
+        self.spinnerLabel.setFixedSize(16, 16)
+        self.spinnerLabel.hide()
+
+        # Timer for spinner animation
+        self._rotation_angle = 0
+        self._spinner_timer = QtCore.QTimer(self)
+        self._spinner_timer.timeout.connect(self._update_spinner)
 
         left = QtWidgets.QHBoxLayout()
         left.addWidget(self.nameEdit)
         left.addStretch(1)
-        
+
+        # Center logo
+        center = QtWidgets.QHBoxLayout()
+        center.addStretch(1)
+        center.addWidget(self.logoLabel)
+        center.addStretch(1)
+
+        # Right layout with spinner after run button
         right = QtWidgets.QHBoxLayout()
         right.addStretch(1)
         right.addWidget(self.importBtn)
         right.addWidget(self.exportBtn)
         right.addWidget(self.runBtn)
-        
+        right.addSpacing(8)  # Add spacing between Run button and spinner
+        right.addWidget(self.spinnerLabel)
+
         layout = QtWidgets.QHBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.addLayout(left)
-        layout.addLayout(right)
+        layout.setContentsMargins(20, 0, 20, 0)  # Logo margins
+        layout.addLayout(left, 1)
+        layout.addLayout(center, 1)
+        layout.addLayout(right, 1)
 
-    def paintEvent(self, ev: QtGui.QPaintEvent) -> None:
-        # 1) Fill header with theme primary color
-        p = QtGui.QPainter(self)
-        p.fillRect(self.rect(), self._bg)
+    def _load_logo(self) -> QtGui.QPixmap:
+        assets_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "assets",
+        )
 
-        # 2) Draw banner centered, preserving aspect ratio
-        if self._banner and not self._banner.isNull():
-            # Scale to header height only, keep aspect ratio
-            pix = self._banner
-            if pix.height() > 0 and self.height() > 0:
-                pix = self._banner.scaledToHeight(self.height(),
-                                                  QtCore.Qt.SmoothTransformation)
+        for filename in ("firesand_logo.png", "Logo_Ai.png", "banner.jpg"):
+            logo_path = os.path.join(assets_dir, filename)
+            pixmap = QtGui.QPixmap(logo_path)
+            if not pixmap.isNull():
+                return pixmap
 
-            x = (self.width()  - pix.width())  // 2
-            y = (self.height() - pix.height()) // 2
-            p.drawPixmap(x, y, pix)
+        print("Logo not found in assets directory.")
+        return QtGui.QPixmap()
 
-    def _load_banner(self) -> QtGui.QPixmap:
-        banner_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "banner.jpg")
-        pm = QtGui.QPixmap(banner_path)
-        if pm.isNull():
-            print("Banner not found or failed to load:", banner_path)
-        return pm
+    def _on_run_stop_clicked(self):
+        """Handle Run/Stop button click"""
+        if self.is_running:
+            self.stopRequested.emit()
+        else:
+            self.runRequested.emit()
+
+    def set_running_state(self, running: bool):
+        """Set the button to Running (Stop) or Ready (Run) state"""
+        self.is_running = running
+        if running:
+            self.runBtn.setText("Stop")
+            self.spinnerLabel.show()
+            self._spinner_timer.start(50)  # 20 FPS
+        else:
+            self.runBtn.setText("Run")
+            self.spinnerLabel.hide()
+            self._spinner_timer.stop()
+
+    def _create_spinner_pixmap(self):
+        """Create a small spinner pixmap with a circular arc"""
+        size = 16
+        pixmap = QtGui.QPixmap(size, size)
+        pixmap.fill(QtCore.Qt.transparent)
+
+        painter = QtGui.QPainter(pixmap)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+
+        # Draw circular arc for spinner
+        pen = QtGui.QPen(QtGui.QColor("#CE2929"))  # Primary red color
+        pen.setWidth(2)
+        pen.setCapStyle(QtCore.Qt.RoundCap)
+        painter.setPen(pen)
+
+        # Draw arc (270 degrees, leaving 90 degree gap)
+        rect = QtCore.QRectF(2, 2, size - 4, size - 4)
+        painter.drawArc(rect, self._rotation_angle * 16, 270 * 16)
+
+        painter.end()
+        return pixmap
+
+    def _update_spinner(self):
+        """Update spinner rotation animation"""
+        self._rotation_angle = (self._rotation_angle + 10) % 360
+        pixmap = self._create_spinner_pixmap()
+        self.spinnerLabel.setPixmap(pixmap)

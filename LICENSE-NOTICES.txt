@@ -1,0 +1,134 @@
+================================================================================
+FIRESAND AUTH MATRIX - LICENSE NOTICES
+================================================================================
+
+This file contains important licensing information for Firesand Auth Matrix
+and its third-party dependencies.
+
+================================================================================
+FIRESAND AUTH MATRIX
+================================================================================
+
+License: GNU General Public License v3.0 (GPL-3.0)
+Copyright: See LICENSE file
+Source: https://github.com/tes1000/Firesand-AuthMatrix
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+================================================================================
+PYSIDE6 (QT FOR PYTHON)
+================================================================================
+
+License: LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+Copyright: Qt Company Ltd and/or its subsidiaries
+Website: https://www.qt.io/qt-for-python
+Source: https://code.qt.io/cgit/pyside/pyside-setup.git/
+
+This application uses PySide6 under the terms of the GNU Lesser General
+Public License version 3 (LGPL-3.0).
+
+IMPORTANT - LGPL-3.0 COMPLIANCE:
+- PySide6 is dynamically linked to this application
+- You have the right to replace the PySide6 library with a modified version
+- The PySide6 source code is available at the repository above
+- The full LGPL-3.0 license text is available at:
+  https://www.gnu.org/licenses/lgpl-3.0.html
+
+Qt Framework License Information:
+The Qt libraries included with PySide6 are also licensed under LGPL-3.0.
+For more information about Qt licensing, visit:
+- https://www.qt.io/licensing/
+- https://doc.qt.io/qtforpython/licenses.html
+
+OBTAINING PYSIDE6 SOURCE CODE:
+You can obtain the complete source code for PySide6 from:
+1. Official repository: https://code.qt.io/cgit/pyside/pyside-setup.git/
+2. PyPI releases: https://pypi.org/project/PySide6/
+3. Qt installer: https://www.qt.io/download-qt-installer
+
+MODIFYING AND REPLACING PYSIDE6:
+Under the LGPL-3.0 license, you have the right to:
+- Modify the PySide6 library
+- Replace the PySide6 library with your modified version
+- Use a different version of PySide6
+
+To replace PySide6 in this application:
+1. Install your desired PySide6 version in the Python environment
+2. The application will use the installed version
+3. For bundled distributions, replace the PySide6 .so/.dll files in the
+   distribution directory
+
+================================================================================
+REQUESTS
+================================================================================
+
+License: Apache License 2.0
+Copyright: Kenneth Reitz and other contributors
+Source: https://github.com/psf/requests
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at:
+https://www.apache.org/licenses/LICENSE-2.0
+
+================================================================================
+PILLOW (PIL FORK)
+================================================================================
+
+License: Historical Permission Notice and Disclaimer (HPND)
+Copyright: Alex Clark and Contributors
+Source: https://github.com/python-pillow/Pillow
+
+Pillow is licensed under the open source HPND License.
+See: https://github.com/python-pillow/Pillow/blob/main/LICENSE
+
+================================================================================
+COMPLETE LICENSE INFORMATION
+================================================================================
+
+For complete license information, including the full text of all licenses,
+please see the THIRD_PARTY_LICENSES.md file included with this software or
+visit: https://github.com/tes1000/Firesand-AuthMatrix
+
+================================================================================
+COMMERCIAL USE
+================================================================================
+
+This software may be used for commercial purposes in compliance with:
+- The GPL-3.0 license for the main application
+- The LGPL-3.0 license for PySide6 (dynamic linking compliant)
+- The Apache-2.0 license for Requests
+- The HPND license for Pillow
+
+You are NOT required to release your application's source code when using
+this software commercially, as long as you comply with the LGPL-3.0
+requirements for PySide6 (i.e., keep it dynamically linked and inform users
+of their rights under LGPL-3.0).
+
+================================================================================
+NO WARRANTY
+================================================================================
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+For questions about licensing, please contact the project maintainers at:
+https://github.com/tes1000/Firesand-AuthMatrix/issues
+================================================================================

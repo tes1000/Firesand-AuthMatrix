@@ -1,0 +1,169 @@
+name: Integration Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov requests
+    
+    - name: Build test API Docker image
+      run: |
+        docker build -t authmatrix-test-api:latest ./test_api
+    
+    - name: Start test API container
+      run: |
+        docker run -d \
+          --name authmatrix-test-api \
+          -p 8000:8000 \
+          authmatrix-test-api:latest
+        
+        echo "Waiting for API to be ready..."
+        sleep 5
+        
+        # Wait for API to be healthy
+        for i in {1..30}; do
+          if curl -f http://localhost:8000/health > /dev/null 2>&1; then
+            echo "✓ Test API is ready"
+            break
+          fi
+          echo "Waiting for API... (attempt $i/30)"
+          sleep 2
+        done
+        
+        # Verify API is running
+        curl -f http://localhost:8000/health || exit 1
+    
+    - name: Show API logs (pre-test)
+      if: always()
+      run: |
+        echo "=== Test API Logs ==="
+        docker logs authmatrix-test-api
+    
+    - name: Run integration tests
+      run: |
+        pytest tests/test_integration.py -v --tb=short --cov=. --cov-report=xml --cov-report=term
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+    
+    - name: Show API logs (post-test)
+      if: always()
+      run: |
+        echo "=== Test API Logs (After Tests) ==="
+        docker logs authmatrix-test-api
+    
+    - name: Stop test API container
+      if: always()
+      run: |
+        docker stop authmatrix-test-api || true
+        docker rm authmatrix-test-api || true
+    
+    - name: Generate coverage report
+      if: always()
+      run: |
+        python -m coverage report --format=markdown > integration_coverage_report.md || echo "No coverage data"
+        python -m coverage report || echo "No coverage data"
+    
+    - name: Upload coverage to Codecov
+      if: always()
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: integration
+        name: codecov-integration
+        fail_ci_if_error: false
+    
+    - name: Comment PR with integration test results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          
+          let testSummary = '## 🔗 Integration Test Results\n\n';
+          testSummary += 'Integration tests completed. ';
+          testSummary += 'These tests validate Auth Matrix against a live FastAPI server.\n\n';
+          
+          let coverageReport = '';
+          try {
+            coverageReport = fs.readFileSync('integration_coverage_report.md', 'utf8');
+          } catch (error) {
+            coverageReport = 'Coverage report not available';
+          }
+          
+          const comment = `${testSummary}
+          
+          ## 📊 Integration Test Coverage
+          
+          ${coverageReport}
+          
+          ---
+          *Integration tests run on: Ubuntu Latest, Python 3.12*
+          *Test API: FastAPI with Docker*
+          *Workflow: ${context.workflow} • Run #${context.runNumber}*`;
+          
+          // Find existing comment
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          const botComment = comments.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('🔗 Integration Test Results')
+          );
+          
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: comment
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+          }
+    
+    - name: Upload test artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: integration-test-results
+        path: |
+          coverage.xml
+          integration_coverage_report.md
+        retention-days: 30

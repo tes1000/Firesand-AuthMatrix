@@ -12,14 +12,15 @@ class KVRow(QtWidgets.QWidget):
         self.v = QtWidgets.QLineEdit(placeholderText="Header Value")
         add = QtWidgets.QPushButton("Add")
         add.clicked.connect(self._add)
-        self.list = QtWidgets.QTableWidget(0, 2)
-        self.list.setHorizontalHeaderLabels(["Key", "Value"])
-        self.list.horizontalHeader().setStretchLastSection(True)
+        self.list = QtWidgets.QTableWidget(0, 3)
+        self.list.setHorizontalHeaderLabels(["Key", "Value", "Actions"])
+        header = self.list.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)  # Key
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)           # Value
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)             # Actions - fixed width
+        self.list.setColumnWidth(2, 150)  # Actions column - fixed width for delete button
         self.list.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.list.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-
-        remove = QtWidgets.QPushButton("Remove Selected")
-        remove.clicked.connect(self._remove_sel)
 
         top = QtWidgets.QHBoxLayout()
         top.addWidget(self.k)
@@ -29,7 +30,6 @@ class KVRow(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(self)
         layout.addLayout(top)
         layout.addWidget(self.list)
-        layout.addWidget(remove)
 
         store.specChanged.connect(self.refresh)
         self.refresh()
@@ -42,12 +42,17 @@ class KVRow(QtWidgets.QWidget):
         self.k.clear()
         self.v.clear()
 
-    def _remove_sel(self):
-        rows = sorted({i.row() for i in self.list.selectedIndexes()}, reverse=True)
-        keys = list(self.store.spec.get("default_headers", {}).keys())
-        for r in rows:
-            if 0 <= r < len(keys):
-                self.on_remove_key(keys[r])
+    def _remove_header(self, key: str):
+        """Delete a specific header by key"""
+        reply = QtWidgets.QMessageBox.question(
+            self,
+            "Confirm Delete",
+            f"Are you sure you want to delete header '{key}'?",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.No
+        )
+        if reply == QtWidgets.QMessageBox.Yes:
+            self.on_remove_key(key)
 
     def refresh(self):
         headers = self.store.spec.get("default_headers", {})
@@ -55,3 +60,23 @@ class KVRow(QtWidgets.QWidget):
         for i, (k, v) in enumerate(headers.items()):
             self.list.setItem(i, 0, QtWidgets.QTableWidgetItem(k))
             self.list.setItem(i, 1, QtWidgets.QTableWidgetItem(str(v)))
+            
+            # Set row height to accommodate button
+            self.list.setRowHeight(i, 60)
+            
+            # Actions column with delete button
+            actionsWidget = QtWidgets.QWidget()
+            actionsLayout = QtWidgets.QHBoxLayout(actionsWidget)
+            actionsLayout.setContentsMargins(0, 0, 0, 0)
+            
+            deleteBtn = QtWidgets.QPushButton("Delete")
+            deleteBtn.setMinimumHeight(32)
+            deleteBtn.setMinimumWidth(60)
+            deleteBtn.setStyleSheet("QPushButton { background-color: #d32f2f; color: white; padding: 6px 12px; }")
+            deleteBtn.clicked.connect(lambda _=None, key=k: self._remove_header(key))
+            
+            actionsLayout.addStretch()
+            actionsLayout.addWidget(deleteBtn)
+            actionsLayout.addStretch()
+            
+            self.list.setCellWidget(i, 2, actionsWidget)

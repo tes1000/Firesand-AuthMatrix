@@ -28,10 +28,15 @@ class EndpointsSection(QtWidgets.QWidget):
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)  # Method - fit content  
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Interactive)       # Path - user resizable with reasonable default
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)           # Behaviours - take most available space
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)  # Actions - fit content
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Fixed)             # Actions - fixed width
         
         # Set initial column widths for better proportions
         self.table.setColumnWidth(2, 300)  # Path column - reasonable fixed width
+        self.table.setColumnWidth(4, 150)  # Actions column - fixed width for buttons
+        
+        # Set default row height to ensure text is visible
+        self.table.verticalHeader().setDefaultSectionSize(60)
+        
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
@@ -65,13 +70,10 @@ class EndpointsSection(QtWidgets.QWidget):
         for i, ep in enumerate(eps):
             # Name
             self.table.setItem(i, 0, QtWidgets.QTableWidgetItem(ep.get("name","")))
-            # Method (combo)
-            combo = QtWidgets.QComboBox()
-            combo.addItems(["GET","POST","PUT","PATCH","DELETE"])
-            combo.setCurrentText(ep.get("method","GET"))
-            combo.wheelEvent = lambda event: None  # Disable mouse wheel scrolling
-            combo.currentTextChanged.connect(lambda m, row=i: self._on_method_change(row, m))
-            self.table.setCellWidget(i, 1, combo)
+            # Method (plain text)
+            method_item = QtWidgets.QTableWidgetItem(ep.get("method","GET"))
+            method_item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.table.setItem(i, 1, method_item)
             # Path (text display with truncation and tooltip)
             full_path = ep.get("path", "")
             display_path = full_path
@@ -130,12 +132,15 @@ class EndpointsSection(QtWidgets.QWidget):
                 
                 # Create label with tooltip for full content
                 exp_label = QtWidgets.QLabel(full_summary)
-                exp_label.setWordWrap(True)
                 exp_label.setToolTip(full_summary)  # Show full content on hover
                 exp_label.setStyleSheet("QLabel { padding: 4px; }")
             else:
                 exp_label = QtWidgets.QLabel("Not configured")
                 exp_label.setStyleSheet("QLabel { padding: 4px; color: #999; font-style: italic; }")
+            
+            # Ensure label doesn't wrap - use elision instead
+            exp_label.setWordWrap(False)
+            exp_label.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Preferred)
             
             self.table.setCellWidget(i, 3, exp_label)
             # Actions
@@ -144,8 +149,14 @@ class EndpointsSection(QtWidgets.QWidget):
             actionsLayout.setContentsMargins(2, 2, 2, 2)
             
             editBtn = QtWidgets.QPushButton("Edit")
+            editBtn.setMinimumHeight(32)
+            editBtn.setMinimumWidth(50)
+            editBtn.setStyleSheet("QPushButton { padding: 6px 12px; }")
             editBtn.clicked.connect(lambda _=None, row=i: self._edit_endpoint_row(row))
             deleteBtn = QtWidgets.QPushButton("Delete")
+            deleteBtn.setMinimumHeight(32)
+            deleteBtn.setMinimumWidth(60)
+            deleteBtn.setStyleSheet("QPushButton { padding: 6px 12px; background-color: #d32f2f; color: white; }")
             deleteBtn.clicked.connect(lambda _=None, row=i: self._delete_endpoint(row))
             
             actionsLayout.addWidget(editBtn)
@@ -153,10 +164,6 @@ class EndpointsSection(QtWidgets.QWidget):
             actionsLayout.addStretch()
             
             self.table.setCellWidget(i, 4, actionsWidget)
-
-    def _on_method_change(self, row: int, method: str):
-        ep = self.store.spec["endpoints"][row]
-        self.store.update_endpoint_row(row, ep.get("name",""), method, ep.get("path",""))
 
     def _delete_endpoint(self, row: int):
         """Delete an endpoint after confirmation."""
@@ -408,9 +415,9 @@ class EndpointsSection(QtWidgets.QWidget):
             
             # Buttons
             editBtn = QtWidgets.QPushButton("Edit")
-            editBtn.setStyleSheet("QPushButton { background-color: #007bff; color: white; border: none; padding: 4px 12px; border-radius: 3px; margin-left: 8px; }")
+            editBtn.setStyleSheet("QPushButton { background-color: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 3px; margin-left: 8px; }")
             deleteBtn = QtWidgets.QPushButton("Delete")
-            deleteBtn.setStyleSheet("QPushButton { background-color: #dc3545; color: white; border: none; padding: 4px 12px; border-radius: 3px; margin-left: 4px; }")
+            deleteBtn.setStyleSheet("QPushButton { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 3px; margin-left: 4px; }")
             
             editBtn.clicked.connect(lambda: edit_behavior(index))
             deleteBtn.clicked.connect(lambda: delete_behavior(index))

@@ -114,7 +114,6 @@ dmypy.json
 .pyre/
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -134,3 +133,4 @@ Thumbs.db
 *.tmp
 temp/
 logs/
+.pypirc

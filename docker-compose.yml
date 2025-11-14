@@ -1,0 +1,22 @@
+services:
+  test-api:
+    build:
+      context: ./test_api
+      dockerfile: Dockerfile
+    container_name: authmatrix-test-api
+    ports:
+      - "8000:8000"
+    environment:
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health').raise_for_status()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - authmatrix-network
+
+networks:
+  authmatrix-network:
+    driver: bridge
