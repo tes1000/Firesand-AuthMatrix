@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.1](https://github.com/tes1000/Firesand-AuthMatrix/compare/v1.0.0...v1.0.1) (2025-11-14)
+
+
+### Bug Fixes
+
+* added missing requirements ([3cbc050](https://github.com/tes1000/Firesand-AuthMatrix/commit/3cbc0503f9d197196abf9599a2380d8a69c94ad6))
+* added missing requirements ([357d4a8](https://github.com/tes1000/Firesand-AuthMatrix/commit/357d4a8a574e8943bb067c3854029ba4ac091287))
+* Reduce import dialog size and add file browser import ([#28](https://github.com/tes1000/Firesand-AuthMatrix/issues/28)) ([28941b2](https://github.com/tes1000/Firesand-AuthMatrix/commit/28941b29e52547a07c1c88b6aee26b861cc58feb))
+
 ## [1.0.0](https://github.com/tes1000/Firesand-AuthMatrix/compare/v0.1.0...v1.0.0) (2025-11-07)
 
 
