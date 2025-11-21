@@ -73,7 +73,9 @@ class TestIconConversionScript:
         )
         
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert "Successfully converted" in result.stdout or result.returncode == 0
+        # Check for expected success message in output
+        assert "Successfully converted" in result.stdout, \
+               f"Expected success message not found in output: {result.stdout}"
 
 
 class TestPyInstallerSpec:
