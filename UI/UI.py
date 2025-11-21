@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json, sys, time, multiprocessing, pickle, os
+from functools import partial
 from typing import Dict, Any, Optional, Callable, List
 import requests
 
