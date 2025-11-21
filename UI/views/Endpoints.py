@@ -740,7 +740,8 @@ class ConfigureAllEndpointsDialog(QtWidgets.QDialog):
             self.endpoints_table.setItem(i, 2, path_item)
             
             # Configure button
-            config_btn = QtWidgets.QPushButton("Configure")
+            config_btn = QtWidgets.QPushButton("Edit")
+            config_btn.setToolTip("Configure endpoint behavior")
             config_btn.clicked.connect(lambda checked, idx=i: self._configure_endpoint(idx))
             self.endpoints_table.setCellWidget(i, 3, config_btn)
         
