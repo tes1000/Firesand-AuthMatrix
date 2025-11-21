@@ -1,0 +1,30 @@
+name: Auto Assign Agent to Labeled Issues
+
+on:
+  issues:
+    types:
+      - opened
+      - labeled
+
+permissions:
+  issues: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  assign_agent:
+    if: contains(github.event.issue.labels.*.name, 'agent-task')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Delegate issue to GitHub Copilot Agent
+        uses: actions/ai-assistant@v1
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          agent: "python-fullstack"
+          instructions: |
+            Always create a new branch.
+            Never commit directly to main.
+            Branch name MUST be based on the issue title in kebab-case.
+            When complete, open a pull request and link it to this issue.
+            Move the issue to "In Progress" while working.
