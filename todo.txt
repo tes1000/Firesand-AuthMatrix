@@ -1,0 +1,8 @@
+App: Add Windows icon
+App: Fix Export as Postman Collection (blank screen)
+Endpoints: Add Delete All button
+Endpoints: Make Configure All Model popup full-width
+Endpoints: Replace Configure Column icon with "edit"
+Roles: Add Delete All button
+Headers: Add Delete All button
+Results: Show spinner for each endpoint until resolved
