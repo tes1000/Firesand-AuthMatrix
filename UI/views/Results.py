@@ -24,10 +24,19 @@ class ResultsSection(QtWidgets.QWidget):
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(self.table)
+        
+        # Track spinner widgets by (row, col) to manage their lifecycle
+        self._spinners: Dict[tuple, QtWidgets.QWidget] = {}
+        
+        # Cache for SpinnerWidget class (lazy loaded to avoid circular import)
+        self._SpinnerWidget = None
 
     def render(self, results: Dict[str, Dict[str, Dict[str, Any]]]):
         # Reset model (clear removes headers, so we re-apply them below)
         self.table.clear()
+        
+        # Clean up any existing spinners
+        self._cleanup_spinners()
 
         if not results:
             self.table.setRowCount(0)
@@ -58,16 +67,23 @@ class ResultsSection(QtWidgets.QWidget):
             for c, rid in enumerate(role_order, start=1):
                 res = rmap.get(rid, {})
                 st = res.get("status", "")
-                http = res.get("http", "")
-                badge = "✅" if st == "PASS" else ("⏭️" if st == "SKIP" else "❌")
-                text = f"{badge} {http}" if http else badge
-                lat = res.get("latency_ms")
-                if isinstance(lat, int):
-                    text += f"  {lat}ms"
+                
+                # Check if this is a pending status (hourglass emoji or "⏳")
+                if st == "⏳":
+                    # Create and show spinner widget
+                    self._set_cell_spinner(r, c)
+                else:
+                    # Show result text
+                    http = res.get("http", "")
+                    badge = "✅" if st == "PASS" else ("⏭️" if st == "SKIP" else "❌")
+                    text = f"{badge} {http}" if http else badge
+                    lat = res.get("latency_ms")
+                    if isinstance(lat, int):
+                        text += f"  {lat}ms"
 
-                cell = QtWidgets.QTableWidgetItem(text)
-                cell.setTextAlignment(QtCore.Qt.AlignCenter)
-                self.table.setItem(r, c, cell)
+                    cell = QtWidgets.QTableWidgetItem(text)
+                    cell.setTextAlignment(QtCore.Qt.AlignCenter)
+                    self.table.setItem(r, c, cell)
 
     def update_result(self, endpoint_name: str, role: str, result: Dict[str, Any]):
         """Update a single result in the table (for streaming results)"""
@@ -95,7 +111,10 @@ class ResultsSection(QtWidgets.QWidget):
             # Role not found, this shouldn't happen
             return
 
-        # Update the cell
+        # Remove spinner if present
+        self._remove_cell_spinner(row, col)
+
+        # Update the cell with result
         st = result.get("status", "")
         http = result.get("http", "")
         badge = "✅" if st == "PASS" else ("⏭️" if st == "SKIP" else "❌")
@@ -107,3 +126,44 @@ class ResultsSection(QtWidgets.QWidget):
         cell = QtWidgets.QTableWidgetItem(text)
         cell.setTextAlignment(QtCore.Qt.AlignCenter)
         self.table.setItem(row, col, cell)
+    
+    def _set_cell_spinner(self, row: int, col: int):
+        """Set a spinner widget in the specified cell"""
+        # Lazy import to avoid circular dependency (only imported once)
+        if self._SpinnerWidget is None:
+            from ..components.SpinnerWidget import SpinnerWidget
+            self._SpinnerWidget = SpinnerWidget
+        
+        # Create a container widget to center the spinner
+        container = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setAlignment(QtCore.Qt.AlignCenter)
+        
+        # Create spinner
+        spinner = self._SpinnerWidget(size=16)
+        spinner.start()
+        layout.addWidget(spinner)
+        
+        # Set the container as cell widget
+        self.table.setCellWidget(row, col, container)
+        
+        # Track the spinner for cleanup
+        self._spinners[(row, col)] = spinner
+    
+    def _remove_cell_spinner(self, row: int, col: int):
+        """Remove spinner from the specified cell"""
+        key = (row, col)
+        if key in self._spinners:
+            spinner = self._spinners[key]
+            spinner.stop()
+            del self._spinners[key]
+        
+        # Remove cell widget to allow item to be set
+        self.table.removeCellWidget(row, col)
+    
+    def _cleanup_spinners(self):
+        """Clean up all spinner widgets"""
+        for spinner in self._spinners.values():
+            spinner.stop()
+        self._spinners.clear()
