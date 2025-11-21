@@ -16,11 +16,16 @@ class TokensSection(QtWidgets.QWidget):
         addBtn = QtWidgets.QPushButton("Add Token/Role")
         addBtn.clicked.connect(self._add_role)
 
+        deleteAllBtn = QtWidgets.QPushButton("Delete All")
+        deleteAllBtn.clicked.connect(self._delete_all_roles)
+        deleteAllBtn.setToolTip("Delete all roles except the default guest role")
+
         top = QtWidgets.QGridLayout()
         top.addWidget(self.roleEdit,       0, 0)
         top.addWidget(self.authCombo,      0, 1)
         top.addWidget(self.tokenEdit,      0, 2)
         top.addWidget(addBtn,              0, 3)
+        top.addWidget(deleteAllBtn,        0, 4)
 
         self.table = QtWidgets.QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels(["Role", "Auth", "Token", "Actions"])
@@ -63,6 +68,35 @@ class TokensSection(QtWidgets.QWidget):
         )
         if reply == QtWidgets.QMessageBox.Yes:
             self.store.remove_role(role_name)
+
+    def _delete_all_roles(self):
+        """Delete all roles except the default guest role"""
+        roles = self.store.spec.get("roles", {})
+        # Count roles that can be deleted (excluding guest)
+        deletable_roles = [role for role in roles.keys()]
+        
+        if not deletable_roles:
+            QtWidgets.QMessageBox.information(
+                self,
+                "No Roles to Delete",
+                "There are no roles to delete."
+            )
+            return
+        
+        reply = QtWidgets.QMessageBox.question(
+            self,
+            "Confirm Delete All",
+            f"Are you sure you want to delete all {len(deletable_roles)} role(s)?\n\n"
+            f"This will remove: {', '.join(deletable_roles)}\n\n"
+            f"This action cannot be undone.",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.No
+        )
+        
+        if reply == QtWidgets.QMessageBox.Yes:
+            # Delete all roles except guest
+            for role in deletable_roles:
+                self.store.remove_role(role)
 
     def refresh(self):
         roles = self.store.spec.get("roles", {})
