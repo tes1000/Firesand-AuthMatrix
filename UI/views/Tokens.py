@@ -73,13 +73,13 @@ class TokensSection(QtWidgets.QWidget):
         """Delete all roles except the default guest role"""
         roles = self.store.spec.get("roles", {})
         # Count roles that can be deleted (excluding guest)
-        deletable_roles = [role for role in roles.keys() if role != "guest"]
+        deletable_roles = [role for role in roles.keys()]
         
         if not deletable_roles:
             QtWidgets.QMessageBox.information(
                 self,
                 "No Roles to Delete",
-                "There are no roles to delete. The default 'guest' role cannot be removed."
+                "There are no roles to delete."
             )
             return
         
@@ -88,7 +88,6 @@ class TokensSection(QtWidgets.QWidget):
             "Confirm Delete All",
             f"Are you sure you want to delete all {len(deletable_roles)} role(s)?\n\n"
             f"This will remove: {', '.join(deletable_roles)}\n\n"
-            f"The default 'guest' role will be preserved.\n\n"
             f"This action cannot be undone.",
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
             QtWidgets.QMessageBox.No
