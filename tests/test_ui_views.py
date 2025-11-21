@@ -60,6 +60,36 @@ class TestEndpointsSection:
         endpoints = EndpointsSection(store)
         qtbot.addWidget(endpoints)
         assert endpoints is not None
+    
+    def test_configure_all_dialog_edit_button(self, qtbot):
+        """Test ConfigureAllEndpointsDialog has Edit button in Configure column"""
+        from UI.views.Endpoints import ConfigureAllEndpointsDialog
+        from UI.views.SpecStore import SpecStore
+        
+        store = SpecStore()
+        # Add a test endpoint to populate the table
+        store.spec["endpoints"] = [
+            {"name": "Test Endpoint", "method": "GET", "path": "/test", "expect": {}}
+        ]
+        
+        dialog = ConfigureAllEndpointsDialog(store)
+        qtbot.addWidget(dialog)
+        
+        # Verify the dialog initializes
+        assert dialog is not None
+        
+        # Verify the table has at least one row
+        assert dialog.endpoints_table.rowCount() == 1
+        
+        # Get the button from the Configure column (column 3)
+        button_widget = dialog.endpoints_table.cellWidget(0, 3)
+        assert button_widget is not None
+        
+        # Verify the button text is "Edit" not "Configure"
+        assert button_widget.text() == "Edit"
+        
+        # Verify tooltip is set
+        assert "Configure" in button_widget.toolTip()
 
 
 class TestResultsSection:
