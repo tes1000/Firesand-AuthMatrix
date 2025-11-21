@@ -640,7 +640,19 @@ class ConfigureAllEndpointsDialog(QtWidgets.QDialog):
         self.store = store
         self.setWindowTitle("Configure All Endpoints")
         self.setModal(True)
-        self.resize(720, 560)
+        
+        # Calculate full-width dimensions based on screen size
+        screen = QtWidgets.QApplication.primaryScreen()
+        if screen is not None:
+            available = screen.availableGeometry()
+            # Use 90% of screen width for full-width effect, with reasonable max
+            target_width = min(int(available.width() * 0.9), 1600)
+            # Keep height reasonable - 70% of screen height
+            target_height = min(int(available.height() * 0.7), 800)
+            self.resize(target_width, target_height)
+        else:
+            # Fallback to larger fixed size if screen info unavailable
+            self.resize(1200, 700)
         
         layout = QtWidgets.QVBoxLayout(self)
         

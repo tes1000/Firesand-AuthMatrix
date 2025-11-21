@@ -60,6 +60,39 @@ class TestEndpointsSection:
         endpoints = EndpointsSection(store)
         qtbot.addWidget(endpoints)
         assert endpoints is not None
+    
+    def test_configure_all_endpoints_dialog_full_width(self, qtbot):
+        """Test ConfigureAllEndpointsDialog uses full-width sizing"""
+        from UI.views.Endpoints import ConfigureAllEndpointsDialog
+        from UI.views.SpecStore import SpecStore
+        from PySide6 import QtWidgets
+        
+        store = SpecStore()
+        # Add at least one endpoint to avoid the "No Endpoints" message
+        store.spec["endpoints"] = [
+            {"name": "Test", "method": "GET", "path": "/test"}
+        ]
+        
+        dialog = ConfigureAllEndpointsDialog(store)
+        qtbot.addWidget(dialog)
+        
+        # Verify dialog was created
+        assert dialog is not None
+        
+        # Get screen dimensions to verify sizing
+        screen = QtWidgets.QApplication.primaryScreen()
+        if screen is not None:
+            available = screen.availableGeometry()
+            expected_width = min(int(available.width() * 0.9), 1600)
+            expected_height = min(int(available.height() * 0.7), 800)
+            
+            # Check that dialog size matches expected full-width dimensions
+            assert dialog.width() == expected_width
+            assert dialog.height() == expected_height
+        else:
+            # Fallback case
+            assert dialog.width() == 1200
+            assert dialog.height() == 700
 
 
 class TestResultsSection:
