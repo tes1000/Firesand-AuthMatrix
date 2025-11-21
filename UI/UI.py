@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json, sys, time, multiprocessing, pickle, os
+from functools import partial
 from typing import Dict, Any, Optional, Callable, List
 import requests
 
@@ -960,30 +961,6 @@ class MultiCollectionExportDialog(QtWidgets.QDialog):
         self.setModal(True)
         self.setMinimumSize(500, 400)
         self._size_dialog_to_parent(0.7, 0.7)
-
-        layout = QtWidgets.QVBoxLayout(self)
-
-    def _size_dialog_to_parent(self, width_ratio=0.7, height_ratio=0.7):
-        """Size dialog relative to parent window or screen"""
-        if self.parent() and isinstance(self.parent(), QtWidgets.QWidget):
-            parent_size = self.parent().size()
-            target_width = int(parent_size.width() * width_ratio)
-            target_height = int(parent_size.height() * height_ratio)
-        else:
-            screen = QtWidgets.QApplication.primaryScreen()
-            if screen:
-                available = screen.availableGeometry()
-                target_width = int(available.width() * width_ratio)
-                target_height = int(available.height() * height_ratio)
-            else:
-                return
-
-        # Ensure we don't go below minimum size
-        current_min = self.minimumSize()
-        target_width = max(target_width, current_min.width())
-        target_height = max(target_height, current_min.height())
-
-        self.resize(target_width, target_height)
 
         layout = QtWidgets.QVBoxLayout(self)
 
