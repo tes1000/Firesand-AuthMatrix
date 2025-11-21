@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Delegate issue to GitHub Copilot Agent
-        uses: github/issue-delegate@v1
+        uses: actions/ai-assistant@v1
         with:
           issue-number: ${{ github.event.issue.number }}
           agent: "python-fullstack"
