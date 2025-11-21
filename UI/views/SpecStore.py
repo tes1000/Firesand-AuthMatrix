@@ -386,6 +386,11 @@ class SpecStore(QtCore.QObject):
         self.spec["default_headers"].pop(key, None)
         self.specChanged.emit()
 
+    def remove_all_headers(self):
+        """Remove all headers except the default Accept header."""
+        self.spec["default_headers"] = {"Accept": "application/json"}
+        self.specChanged.emit()
+
     # endpoints (bulk parse + table edits)
     def parse_endpoints_text(self, text: str) -> List[Tuple[str, str, str]]:
         """

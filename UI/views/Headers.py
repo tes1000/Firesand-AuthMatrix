@@ -1,6 +1,7 @@
 from PySide6 import QtWidgets
 from .SpecStore import SpecStore
 
+
 class KVRow(QtWidgets.QWidget):
     def __init__(self, on_add, on_remove_key, store: SpecStore, parent=None):
         super().__init__(parent)
@@ -12,13 +13,24 @@ class KVRow(QtWidgets.QWidget):
         self.v = QtWidgets.QLineEdit(placeholderText="Header Value")
         add = QtWidgets.QPushButton("Add")
         add.clicked.connect(self._add)
+
+        deleteAll = QtWidgets.QPushButton("Delete All")
+        deleteAll.setStyleSheet(
+            "QPushButton { background-color: #d32f2f; color: white; padding: 6px 12px; }"
+        )
+        deleteAll.clicked.connect(self._delete_all_headers)
+
         self.list = QtWidgets.QTableWidget(0, 3)
         self.list.setHorizontalHeaderLabels(["Key", "Value", "Actions"])
         header = self.list.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)  # Key
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)           # Value
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)             # Actions - fixed width
-        self.list.setColumnWidth(2, 150)  # Actions column - fixed width for delete button
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)  # Value
+        header.setSectionResizeMode(
+            2, QtWidgets.QHeaderView.Fixed
+        )  # Actions - fixed width
+        self.list.setColumnWidth(
+            2, 150
+        )  # Actions column - fixed width for delete button
         self.list.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.list.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
@@ -26,6 +38,7 @@ class KVRow(QtWidgets.QWidget):
         top.addWidget(self.k)
         top.addWidget(self.v)
         top.addWidget(add)
+        top.addWidget(deleteAll)
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.addLayout(top)
@@ -49,10 +62,29 @@ class KVRow(QtWidgets.QWidget):
             "Confirm Delete",
             f"Are you sure you want to delete header '{key}'?",
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            QtWidgets.QMessageBox.No
+            QtWidgets.QMessageBox.No,
         )
         if reply == QtWidgets.QMessageBox.Yes:
             self.on_remove_key(key)
+
+    def _delete_all_headers(self):
+        """Delete all headers after confirmation"""
+        headers = self.store.spec.get("default_headers", {})
+        if not headers:
+            QtWidgets.QMessageBox.information(
+                self, "No Headers", "There are no headers to delete."
+            )
+            return
+
+        reply = QtWidgets.QMessageBox.question(
+            self,
+            "Confirm Delete All",
+            f"Are you sure you want to delete all {len(headers)} header(s)?\n\nThis will reset headers to the default Accept header only.",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.No,
+        )
+        if reply == QtWidgets.QMessageBox.Yes:
+            self.store.remove_all_headers()
 
     def refresh(self):
         headers = self.store.spec.get("default_headers", {})
@@ -60,23 +92,25 @@ class KVRow(QtWidgets.QWidget):
         for i, (k, v) in enumerate(headers.items()):
             self.list.setItem(i, 0, QtWidgets.QTableWidgetItem(k))
             self.list.setItem(i, 1, QtWidgets.QTableWidgetItem(str(v)))
-            
+
             # Set row height to accommodate button
             self.list.setRowHeight(i, 60)
-            
+
             # Actions column with delete button
             actionsWidget = QtWidgets.QWidget()
             actionsLayout = QtWidgets.QHBoxLayout(actionsWidget)
             actionsLayout.setContentsMargins(0, 0, 0, 0)
-            
+
             deleteBtn = QtWidgets.QPushButton("Delete")
             deleteBtn.setMinimumHeight(32)
             deleteBtn.setMinimumWidth(60)
-            deleteBtn.setStyleSheet("QPushButton { background-color: #d32f2f; color: white; padding: 6px 12px; }")
+            deleteBtn.setStyleSheet(
+                "QPushButton { background-color: #d32f2f; color: white; padding: 6px 12px; }"
+            )
             deleteBtn.clicked.connect(lambda _=None, key=k: self._remove_header(key))
-            
+
             actionsLayout.addStretch()
             actionsLayout.addWidget(deleteBtn)
             actionsLayout.addStretch()
-            
+
             self.list.setCellWidget(i, 2, actionsWidget)
