@@ -56,15 +56,22 @@ def _set_window_icon(self):
 
 For proper Windows taskbar grouping and icon display, the application sets the Windows App User Model ID:
 
-**Location**: `UI/UI.py` in `start_ui()` function (lines 2031-2036)
+**Location**: `UI/UI.py` in `start_ui()` function (lines 2005-2013)
+
+**Critical Implementation Detail**: The `SetCurrentProcessExplicitAppUserModelID` call is made **BEFORE** creating the `QApplication`. This ordering is essential for Windows to properly associate the taskbar icon with the application.
 
 ```python
+# CRITICAL: Set Windows AppUserModelID BEFORE creating QApplication
+# This is required for the taskbar icon to display correctly on Windows.
+# Must be called before any Qt windows are created.
 try:
     import ctypes
     app_id = 'Firesand.AuthMatrix.1.0'
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
-except:
+except (AttributeError, OSError):
     pass  # Not on Windows or API not available
+
+app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
 ```
 
 This ensures:

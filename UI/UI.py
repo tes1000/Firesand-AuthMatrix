@@ -2002,6 +2002,16 @@ def start_ui(runner: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None
         # Already set, ignore
         pass
 
+    # CRITICAL: Set Windows AppUserModelID BEFORE creating QApplication
+    # This is required for the taskbar icon to display correctly on Windows.
+    # Must be called before any Qt windows are created.
+    try:
+        import ctypes
+        app_id = 'Firesand.AuthMatrix.1.0'
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+    except (AttributeError, OSError):
+        pass  # Not on Windows or API not available
+
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
     
     # Set application icon for Windows taskbar
@@ -2027,13 +2037,6 @@ def start_ui(runner: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None
     if icon_path:
         app_icon = QtGui.QIcon(str(icon_path))
         app.setWindowIcon(app_icon)
-        # On Windows, also set the app user model ID to ensure taskbar icon works
-        try:
-            import ctypes
-            app_id = 'Firesand.AuthMatrix.1.0'
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
-        except:
-            pass  # Not on Windows or API not available
     
     mw = MainWindow(runner=runner)
     mw.show()
