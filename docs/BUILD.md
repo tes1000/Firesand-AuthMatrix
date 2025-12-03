@@ -9,6 +9,8 @@ build.bat
 
 The executable will be created at `dist\AuthMatrix.exe`
 
+**Note**: The build script automatically converts the source PNG icon to multi-size ICO format before building the executable.
+
 ## Manual Build
 
 1. Install PyInstaller:
@@ -31,6 +33,7 @@ The `AuthMatrix.spec` file ensures that:
 - All hidden imports are detected
 - The binary is built as a windowed application (no console)
 - License files (`THIRD_PARTY_LICENSES.md`, `LICENSE-NOTICES.txt`) are included in distributions
+- Windows icon is embedded in the executable (`icon='UI/assets/favicon.ico'`)
 
 ### LGPL-3.0 Compliance
 
@@ -54,6 +57,11 @@ For detailed information, see [PYSIDE6_LGPL_COMPLIANCE.md](PYSIDE6_LGPL_COMPLIAN
 ### Assets not loading
 - Verify `UI/assets` folder exists
 - Check the `datas` section in `AuthMatrix.spec`
+
+### Icon not showing
+- Ensure `UI/assets/favicon.ico` exists (run `python convert_icon.py` if needed)
+- The icon is set in `AuthMatrix.spec` with `icon='UI/assets/favicon.ico'`
+- For Windows taskbar icon, the application uses `SetCurrentProcessExplicitAppUserModelID`
 
 ## CI/CD
 
