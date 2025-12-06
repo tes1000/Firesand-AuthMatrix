@@ -50,12 +50,7 @@ class LogoHeader(QtWidgets.QWidget):
         self.exportBtn.clicked.connect(self.exportRequested.emit)
         self.runBtn.clicked.connect(self._on_run_stop_clicked)
 
-        # Spinner label for inline animation (initially hidden)
-        self.spinnerLabel = QtWidgets.QLabel()
-        self.spinnerLabel.setFixedSize(16, 16)
-        self.spinnerLabel.hide()
-
-        # Timer for spinner animation
+        # Timer for spinner animation (for button icon)
         self._rotation_angle = 0
         self._spinner_timer = QtCore.QTimer(self)
         self._spinner_timer.timeout.connect(self._update_spinner)
@@ -70,14 +65,12 @@ class LogoHeader(QtWidgets.QWidget):
         center.addWidget(self.logoLabel)
         center.addStretch(1)
 
-        # Right layout with spinner after run button
+        # Right layout with buttons
         right = QtWidgets.QHBoxLayout()
         right.addStretch(1)
         right.addWidget(self.importBtn)
         right.addWidget(self.exportBtn)
         right.addWidget(self.runBtn)
-        right.addSpacing(8)  # Add spacing between Run button and spinner
-        right.addWidget(self.spinnerLabel)
 
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(20, 0, 20, 0)  # Logo margins
@@ -112,12 +105,14 @@ class LogoHeader(QtWidgets.QWidget):
         self.is_running = running
         if running:
             self.runBtn.setText("Stop")
-            self.spinnerLabel.show()
             self._spinner_timer.start(50)  # 20 FPS
+            # Set initial spinner icon
+            self._update_spinner()
         else:
             self.runBtn.setText("Run")
-            self.spinnerLabel.hide()
             self._spinner_timer.stop()
+            # Clear the icon
+            self.runBtn.setIcon(QtGui.QIcon())
 
     def _create_spinner_pixmap(self):
         """Create a small spinner pixmap with a circular arc"""
@@ -145,4 +140,5 @@ class LogoHeader(QtWidgets.QWidget):
         """Update spinner rotation animation"""
         self._rotation_angle = (self._rotation_angle + 10) % 360
         pixmap = self._create_spinner_pixmap()
-        self.spinnerLabel.setPixmap(pixmap)
+        # Set the spinner as button icon
+        self.runBtn.setIcon(QtGui.QIcon(pixmap))
