@@ -684,6 +684,17 @@ class ConfigureAllEndpointsDialog(QtWidgets.QDialog):
         self.endpoints_table = QtWidgets.QTableWidget()
         self.endpoints_table.setColumnCount(4)
         self.endpoints_table.setHorizontalHeaderLabels(["Endpoint", "Method", "Path", "Configure"])
+        
+        # Set column resize modes for better layout
+        header = self.endpoints_table.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)  # Endpoint - stretch
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)  # Method - fit content
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)  # Path - stretch
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)  # Configure - fixed width
+        
+        # Set fixed width for Configure column to accommodate button
+        self.endpoints_table.setColumnWidth(3, 100)
+        
         self._refresh_endpoints_table()
         endpoints_layout.addWidget(self.endpoints_table)
         
@@ -740,11 +751,10 @@ class ConfigureAllEndpointsDialog(QtWidgets.QDialog):
             self.endpoints_table.setItem(i, 2, path_item)
             
             # Configure button
-            config_btn = QtWidgets.QPushButton("Configure")
+            config_btn = QtWidgets.QPushButton("Edit")
+            config_btn.setToolTip("Configure endpoint behavior")
             config_btn.clicked.connect(lambda checked, idx=i: self._configure_endpoint(idx))
             self.endpoints_table.setCellWidget(i, 3, config_btn)
-        
-        self.endpoints_table.resizeColumnsToContents()
     
     def _add_role(self):
         dialog = AddRoleDialog(self)
