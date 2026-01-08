@@ -1,5 +1,7 @@
 # Firesands Auth Matrix
 
+<img width="2046" height="1209" alt="image" src="https://github.com/user-attachments/assets/c4dddb98-25e8-480a-b286-9b65c976867d" />
+
 A comprehensive tool for testing API authorization matrices across different user roles and endpoints. This application helps developers verify that their APIs properly restrict access based on user authentication levels.
 
 ## Features
